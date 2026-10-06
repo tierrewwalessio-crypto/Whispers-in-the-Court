@@ -1,0 +1,344 @@
+﻿# Voices of the Court - the ACTION CATALOGUE.
+#
+# This file is the contract between the game and the AI. The middleware never
+# writes raw effects into run/votc_in.txt; it may only call the votc_act_*
+# effects below, with arguments drawn from a fixed vocabulary:
+#
+#   tier   = weak | mild | severe
+#   sign   = bonus | penalty
+#   estate = nobles_estate | clergy_estate | burghers_estate |
+#            peasants_estate | tribes_estate | dhimmi_estate | cossacks_estate
+#   edict  = one of the votc_edict_* modifiers in
+#            main_menu/common/static_modifiers/votc_modifiers.txt
+#
+# Anything outside that vocabulary simply does not resolve to an effect, so
+# the worst a confused model can do is write a line the engine ignores.
+#
+# Targets are read from country VARIABLES (var:votc_tchar, var:votc_tcountry,
+# var:votc_tlocation), not from saved scopes: a saved scope only lives for one
+# unbroken chain, and the middleware's run file is always a new chain, minutes
+# after the player clicked. Variables survive that gap and the save game.
+#
+# Magnitudes are vanilla's own event constants (stability_mild_bonus,
+# estate_satisfaction_weak_penalty, ...) from
+# main_menu/common/script_values/default_values.txt, which keeps a VotC
+# outcome the same size as an ordinary event outcome.
+#
+# Every action first asks votc_try_spend for permission. Two independent
+# limits apply: the monthly influence budget, and a hard cap on how many
+# actions one scene may apply (votc_max_actions_per_scene).
+
+# =====================================================================
+# Gatekeeper
+# =====================================================================
+
+# Sets var:votc_spend_ok to 1 when the action may proceed, 0 otherwise.
+# $c$ names a cost band: weak / mild / severe / edict / opinion / societal /
+# char_modifier / privilege. votc_cost_<c> and votc_cost_<c>_neg both exist.
+votc_try_spend = {
+	set_variable = { name = votc_spend_ok value = 0 }
+	if = {
+		limit = {
+			has_variable = votc_budget
+			var:votc_budget >= votc_cost_$c$
+			var:votc_scene_actions < votc_max_actions_per_scene
+		}
+		change_variable = { name = votc_budget add = votc_cost_$c$_neg }
+		change_variable = { name = votc_scene_actions add = 1 }
+		change_variable = { name = votc_scene_spent add = votc_cost_$c$ }
+		set_variable = { name = votc_spend_ok value = 1 }
+	}
+	else_if = {
+		limit = { var:votc_scene_actions >= votc_max_actions_per_scene }
+		votc_set_args = { a1 = var:votc_scene_actions a2 = 0 a3 = 0 }
+		votc_log_seq = { key = votc_ack_refused_cap }
+	}
+	else = {
+		votc_log_seq = { key = votc_ack_refused_budget }
+	}
+}
+
+# Closes a scene: reports what was actually spent, resets the per-scene cap.
+votc_end_scene = {
+	votc_set_args = { a1 = var:votc_scene_spent a2 = 0 a3 = 0 }
+	votc_log_seq = { key = votc_ack_applied }
+	set_variable = { name = votc_scene_actions value = 0 }
+	set_variable = { name = votc_scene_spent value = 0 }
+}
+
+# =====================================================================
+# Crown currencies
+# =====================================================================
+
+votc_act_stability = {
+	votc_try_spend = { c = $tier$ }
+	if = { limit = { var:votc_spend_ok = 1 } add_stability = stability_$tier$_$sign$ }
+}
+
+votc_act_prestige = {
+	votc_try_spend = { c = $tier$ }
+	if = { limit = { var:votc_spend_ok = 1 } add_prestige = prestige_$tier$_$sign$ }
+}
+
+votc_act_legitimacy = {
+	votc_try_spend = { c = $tier$ }
+	if = { limit = { var:votc_spend_ok = 1 } add_legitimacy = legitimacy_$tier$_$sign$ }
+}
+
+votc_act_government_power = {
+	votc_try_spend = { c = $tier$ }
+	if = { limit = { var:votc_spend_ok = 1 } add_government_power = government_power_$tier$_$sign$ }
+}
+
+# Only fires for countries that actually use the currency, so a Catholic
+# kingdom never gets a karma line in its chronicle.
+votc_act_devotion = {
+	votc_try_spend = { c = $tier$ }
+	if = { limit = { var:votc_spend_ok = 1 } add_devotion = devotion_$tier$_$sign$ }
+}
+
+votc_act_karma = {
+	votc_try_spend = { c = $tier$ }
+	if = { limit = { var:votc_spend_ok = 1 } add_karma = karma_$tier$_$sign$ }
+}
+
+votc_act_horde_unity = {
+	votc_try_spend = { c = $tier$ }
+	if = { limit = { var:votc_spend_ok = 1 } add_horde_unity = horde_unity_$tier$_$sign$ }
+}
+
+votc_act_republican_tradition = {
+	votc_try_spend = { c = $tier$ }
+	if = { limit = { var:votc_spend_ok = 1 } add_republican_tradition = republican_tradition_$tier$_$sign$ }
+}
+
+votc_act_army_tradition = {
+	votc_try_spend = { c = $tier$ }
+	if = { limit = { var:votc_spend_ok = 1 } add_army_tradition = army_tradition_$tier$_$sign$ }
+}
+
+# Relief or exhaustion. sign = penalty REDUCES war exhaustion, which is the
+# good outcome, so the naming follows the currency and not the mood.
+votc_act_war_exhaustion = {
+	votc_try_spend = { c = $tier$ }
+	if = { limit = { var:votc_spend_ok = 1 } add_war_exhaustion = war_exhaustion_$tier$_$sign$ }
+}
+
+# =====================================================================
+# Treasury and levies - scaled to the size of the realm, never flat
+# =====================================================================
+
+votc_act_gold_gain = {
+	votc_try_spend = { c = $tier$ }
+	if = { limit = { var:votc_spend_ok = 1 } add_gold = votc_gold_$tier$ }
+}
+
+votc_act_gold_loss = {
+	votc_try_spend = { c = $tier$ }
+	if = {
+		limit = { var:votc_spend_ok = 1 }
+		add_gold = { value = votc_gold_$tier$ multiply = -1 }
+	}
+}
+
+votc_act_manpower_gain = {
+	votc_try_spend = { c = $tier$ }
+	if = { limit = { var:votc_spend_ok = 1 } add_manpower = votc_manpower_$tier$ }
+}
+
+votc_act_manpower_loss = {
+	votc_try_spend = { c = $tier$ }
+	if = {
+		limit = { var:votc_spend_ok = 1 }
+		add_manpower = { value = votc_manpower_$tier$ multiply = -1 }
+	}
+}
+
+# =====================================================================
+# The estates
+# =====================================================================
+
+votc_act_estate = {
+	votc_try_spend = { c = $tier$ }
+	if = {
+		limit = {
+			var:votc_spend_ok = 1
+			country_has_estate = estate_type:$estate$
+		}
+		add_estate_satisfaction = {
+			type = estate_type:$estate$
+			value = estate_satisfaction_$tier$_$sign$
+		}
+	}
+}
+
+# Everyone at once - deliberately one tier weaker than a single estate move
+# would be, because it touches the whole realm.
+votc_act_all_estates = {
+	votc_try_spend = { c = mild }
+	if = {
+		limit = { var:votc_spend_ok = 1 }
+		add_all_estate_satisfaction = { value = estate_satisfaction_weak_$sign$ }
+	}
+}
+
+# =====================================================================
+# Royal edicts - a timed country modifier from the curated list
+# =====================================================================
+
+# duration = short (5 years) or long (15 years). Nothing permanent is ever
+# handed out by the AI.
+votc_act_edict_short = {
+	votc_try_spend = { c = edict }
+	if = {
+		limit = { var:votc_spend_ok = 1 }
+		add_country_modifier = { modifier = $edict$ years = 5 mode = add_and_extend }
+	}
+}
+
+votc_act_edict_long = {
+	votc_try_spend = { c = edict }
+	if = {
+		limit = { var:votc_spend_ok = 1 }
+		add_country_modifier = { modifier = $edict$ years = 15 mode = add_and_extend }
+	}
+}
+
+# =====================================================================
+# Societal drift - the slowest, most structural lever the AI can pull
+# =====================================================================
+
+# direction = minor_move_to_left | minor_move_to_right | tiny_move_to_left |
+#             tiny_move_to_right
+votc_act_societal = {
+	votc_try_spend = { c = societal }
+	if = {
+		limit = { var:votc_spend_ok = 1 }
+		change_societal_value = {
+			type = $type$
+			value = societal_value_$direction$
+		}
+	}
+}
+
+# =====================================================================
+# People
+# =====================================================================
+
+# Marks the person the player just spoke to. modifier is one of the
+# votc_char_* entries in votc_modifiers.txt.
+votc_act_char_modifier = {
+	votc_try_spend = { c = char_modifier }
+	if = {
+		limit = {
+			var:votc_spend_ok = 1
+			exists = var:votc_tchar
+		}
+		var:votc_tchar = {
+			add_character_modifier = {
+				modifier = $modifier$
+				years = 10
+				mode = add_and_extend
+			}
+		}
+	}
+}
+
+# =====================================================================
+# Foreign courts
+# =====================================================================
+
+# How the country we just spoke to now feels about us. modifier is one of the
+# votc_opinion_* entries in in_game/common/biases/votc_biases.txt.
+votc_act_opinion = {
+	votc_try_spend = { c = opinion }
+	if = {
+		limit = {
+			var:votc_spend_ok = 1
+			exists = var:votc_tcountry
+		}
+		var:votc_tcountry = {
+			add_opinion = { target = root modifier = $modifier$ }
+		}
+	}
+}
+
+votc_act_trust_gain = {
+	votc_try_spend = { c = opinion }
+	if = {
+		limit = {
+			var:votc_spend_ok = 1
+			exists = var:votc_tcountry
+		}
+		add_trust = { target = var:votc_tcountry value = 5 }
+	}
+}
+
+votc_act_trust_loss = {
+	votc_try_spend = { c = opinion }
+	if = {
+		limit = {
+			var:votc_spend_ok = 1
+			exists = var:votc_tcountry
+		}
+		add_trust = { target = var:votc_tcountry value = -5 }
+	}
+}
+
+# =====================================================================
+# Places - only ever the location the ruler is actually standing in
+# =====================================================================
+
+votc_act_local_control = {
+	votc_try_spend = { c = $tier$ }
+	if = {
+		limit = {
+			var:votc_spend_ok = 1
+			exists = var:votc_tlocation
+		}
+		var:votc_tlocation = {
+			add_self_control = self_control_$tier$_$sign$
+		}
+	}
+}
+
+votc_act_local_prosperity = {
+	votc_try_spend = { c = $tier$ }
+	if = {
+		limit = {
+			var:votc_spend_ok = 1
+			exists = var:votc_tlocation
+		}
+		var:votc_tlocation = {
+			change_prosperity = prosperity_$tier$_$sign$
+		}
+	}
+}
+
+# The realm's memory of a royal visit.
+votc_act_progress_acclaimed = {
+	votc_try_spend = { c = mild }
+	if = {
+		limit = { var:votc_spend_ok = 1 }
+		add_country_modifier = { modifier = votc_progress_acclaimed years = 5 mode = add_and_extend }
+	}
+}
+
+votc_act_progress_resented = {
+	votc_try_spend = { c = weak }
+	if = {
+		limit = { var:votc_spend_ok = 1 }
+		add_country_modifier = { modifier = votc_progress_resented years = 5 mode = add_and_extend }
+	}
+}
+
+# =====================================================================
+# The empty action
+# =====================================================================
+
+# Explicitly doing nothing is a first-class choice: most conversations should
+# change nothing but the mood at court, and the model needs a cheap way to
+# say so rather than reaching for an effect it does not need.
+votc_act_nothing = {
+	set_variable = { name = votc_spend_ok value = 0 }
+}

@@ -1,0 +1,534 @@
+﻿# Whispers in the Court - POWER: what happens to people, and to the realm's unity.
+# Written by the patch in tools/ (see docs/ARCHITETTURA.md).
+#
+# Like every consequence these run from the confirming option of an event, so
+# the game's own tooltip shows them. A person is named through a variable bound
+# to the queue slot when the mail was written (votc_bind_target), because the
+# court slots p1..p6 move with every heartbeat.
+
+# who = ruler | heir | p1 ... p6 | tchar
+votc_bind_target = {
+	set_variable = { name = votc_tgt_$slot$ value = var:votc_$who$ }
+}
+
+# ------------------------------------------------------------------ people
+# reason = execution | assassination | fever | vanished
+votc_order_kill = {
+	if = {
+		limit = { exists = var:$t$ var:$t$ = { is_alive = yes } }
+		kill_character = { target = var:$t$ reason = $reason$ }
+	}
+}
+
+# The ruler is removed; the succession of the realm decides who follows.
+votc_order_depose = {
+	if = {
+		limit = { exists = var:$t$ var:$t$ = { is_ruler = yes is_alive = yes } }
+		var:$t$ = { remove_ruler = root }
+	}
+}
+
+# This person takes the throne (a usurper, a regent's coup, a chosen heir).
+votc_order_crown = {
+	if = {
+		limit = { exists = var:$t$ var:$t$ = { is_alive = yes is_ruler = no } }
+		set_new_ruler = var:$t$
+	}
+}
+
+votc_order_heir = {
+	if = {
+		limit = { exists = var:$t$ var:$t$ = { is_alive = yes is_ruler = no } }
+		set_as_designated_heir = var:$t$
+	}
+}
+
+votc_order_regent = {
+	if = {
+		limit = { exists = var:$t$ var:$t$ = { is_alive = yes is_ruler = no } }
+		set_regent = var:$t$
+	}
+}
+
+votc_order_to_cabinet = {
+	if = {
+		limit = { exists = var:$t$ var:$t$ = { is_alive = yes in_cabinet = no } }
+		add_to_cabinet = var:$t$
+	}
+}
+
+votc_order_from_cabinet = {
+	if = {
+		limit = { exists = var:$t$ var:$t$ = { in_cabinet = yes } }
+		remove_from_cabinet = var:$t$
+	}
+}
+
+# Sent away to a foreign court: the court the talk was about, else a neighbour.
+votc_order_exile = {
+	if = {
+		limit = { exists = var:$t$ var:$t$ = { is_alive = yes is_ruler = no } }
+		if = {
+			limit = { exists = var:votc_tcountry NOT = { var:votc_tcountry = root } }
+			var:votc_tcountry = { save_scope_as = votc_exile_to }
+		}
+		else = {
+			random_neighbor_country = { save_scope_as = votc_exile_to }
+		}
+		if = {
+			limit = { exists = scope:votc_exile_to }
+			var:$t$ = { move_country = scope:votc_exile_to }
+		}
+	}
+}
+
+# ------------------------------------------------------------------ the realm divided
+# estate = nobles_estate | clergy_estate | burghers_estate | peasants_estate
+# The rebels are an estate rising; the places that join them are chosen by a
+# criterion (never the capital). A named leader, bound to the same slot, goes
+# over to them - never the ruler: the crown they rise against keeps its head. "revolt" leaves them brewing (the game raises them when their
+# progress is full); "civil_war" starts the war at once, as the game's own
+# uprisings do (create_rebel, change_pop_allegiance, start_civil_war).
+
+# The rising of an estate: the one already brewing if there is one (as the game's own events do:
+# two risings of the same estate at once leave the game in a state it does not expect), else a
+# new one. Only the pops of that estate go over to it, and only a person free to (never the
+# ruler, the heir, a minister or a commander in the field).
+votc_rising_of = {
+	if = {
+		limit = { any_rebel = { estate_type ?= estate_type:$estate$ } }
+		random_rebel = {
+			limit = { estate_type ?= estate_type:$estate$ }
+			save_scope_as = votc_rising
+		}
+	}
+	else = {
+		create_rebel = {
+			category = estate
+			estate = $estate$
+			save_scope_as = votc_rising
+		}
+	}
+}
+
+votc_order_revolt_far = {
+	if = {
+		limit = {
+			country_has_estate = estate_type:$estate$
+			any_owned_location = { is_capital = no NOT = { region = root.capital.region } }
+		}
+		votc_rising_of = { estate = $estate$ }
+		if = {
+			limit = { exists = scope:votc_rising }
+			every_owned_location = {
+				limit = { is_capital = no NOT = { region = root.capital.region } }
+				every_pop = {
+					limit = { votc_pop_of_$estate$ = yes }
+					change_pop_allegiance = scope:votc_rising
+				}
+			}
+			var:$t$ ?= {
+				if = {
+					limit = { votc_may_join_rising = yes }
+					change_character_allegiance = scope:votc_rising
+				}
+			}
+			scope:votc_rising = { add_rebel_progress = 0.5 }
+		}
+	}
+}
+
+votc_order_civil_war_far = {
+	if = {
+		limit = {
+			country_has_estate = estate_type:$estate$
+			any_owned_location = { is_capital = no NOT = { region = root.capital.region } }
+		}
+		if = {
+			# already brewing: it is driven to the brink, and the game raises it itself
+			limit = { any_rebel = { estate_type ?= estate_type:$estate$ } }
+			random_rebel = {
+				limit = { estate_type ?= estate_type:$estate$ }
+				save_scope_as = votc_rising
+			}
+			every_owned_location = {
+				limit = { is_capital = no NOT = { region = root.capital.region } }
+				every_pop = {
+					limit = { votc_pop_of_$estate$ = yes }
+					change_pop_allegiance = scope:votc_rising
+				}
+			}
+			var:$t$ ?= {
+				if = {
+					limit = { votc_may_join_rising = yes }
+					change_character_allegiance = scope:votc_rising
+				}
+			}
+			scope:votc_rising = { add_rebel_progress = 1 }
+		}
+		else = {
+			create_rebel = {
+				category = estate
+				estate = $estate$
+				save_scope_as = votc_rising
+			}
+			every_owned_location = {
+				limit = { is_capital = no NOT = { region = root.capital.region } }
+				every_pop = {
+					limit = { votc_pop_of_$estate$ = yes }
+					change_pop_allegiance = scope:votc_rising
+				}
+			}
+			var:$t$ ?= {
+				if = {
+					limit = { votc_may_join_rising = yes }
+					change_character_allegiance = scope:votc_rising
+				}
+			}
+			scope:votc_rising = { start_civil_war = {} }
+		}
+	}
+}
+
+votc_order_revolt_outer = {
+	if = {
+		limit = {
+			country_has_estate = estate_type:$estate$
+			any_owned_location = { is_capital = no NOT = { area = root.capital.area } }
+		}
+		votc_rising_of = { estate = $estate$ }
+		if = {
+			limit = { exists = scope:votc_rising }
+			every_owned_location = {
+				limit = { is_capital = no NOT = { area = root.capital.area } }
+				every_pop = {
+					limit = { votc_pop_of_$estate$ = yes }
+					change_pop_allegiance = scope:votc_rising
+				}
+			}
+			var:$t$ ?= {
+				if = {
+					limit = { votc_may_join_rising = yes }
+					change_character_allegiance = scope:votc_rising
+				}
+			}
+			scope:votc_rising = { add_rebel_progress = 0.5 }
+		}
+	}
+}
+
+votc_order_civil_war_outer = {
+	if = {
+		limit = {
+			country_has_estate = estate_type:$estate$
+			any_owned_location = { is_capital = no NOT = { area = root.capital.area } }
+		}
+		if = {
+			# already brewing: it is driven to the brink, and the game raises it itself
+			limit = { any_rebel = { estate_type ?= estate_type:$estate$ } }
+			random_rebel = {
+				limit = { estate_type ?= estate_type:$estate$ }
+				save_scope_as = votc_rising
+			}
+			every_owned_location = {
+				limit = { is_capital = no NOT = { area = root.capital.area } }
+				every_pop = {
+					limit = { votc_pop_of_$estate$ = yes }
+					change_pop_allegiance = scope:votc_rising
+				}
+			}
+			var:$t$ ?= {
+				if = {
+					limit = { votc_may_join_rising = yes }
+					change_character_allegiance = scope:votc_rising
+				}
+			}
+			scope:votc_rising = { add_rebel_progress = 1 }
+		}
+		else = {
+			create_rebel = {
+				category = estate
+				estate = $estate$
+				save_scope_as = votc_rising
+			}
+			every_owned_location = {
+				limit = { is_capital = no NOT = { area = root.capital.area } }
+				every_pop = {
+					limit = { votc_pop_of_$estate$ = yes }
+					change_pop_allegiance = scope:votc_rising
+				}
+			}
+			var:$t$ ?= {
+				if = {
+					limit = { votc_may_join_rising = yes }
+					change_character_allegiance = scope:votc_rising
+				}
+			}
+			scope:votc_rising = { start_civil_war = {} }
+		}
+	}
+}
+
+votc_order_revolt_foreign_culture = {
+	if = {
+		limit = {
+			country_has_estate = estate_type:$estate$
+			any_owned_location = { is_capital = no NOT = { dominant_culture = root.culture } }
+		}
+		votc_rising_of = { estate = $estate$ }
+		if = {
+			limit = { exists = scope:votc_rising }
+			every_owned_location = {
+				limit = { is_capital = no NOT = { dominant_culture = root.culture } }
+				every_pop = {
+					limit = { votc_pop_of_$estate$ = yes }
+					change_pop_allegiance = scope:votc_rising
+				}
+			}
+			var:$t$ ?= {
+				if = {
+					limit = { votc_may_join_rising = yes }
+					change_character_allegiance = scope:votc_rising
+				}
+			}
+			scope:votc_rising = { add_rebel_progress = 0.5 }
+		}
+	}
+}
+
+votc_order_civil_war_foreign_culture = {
+	if = {
+		limit = {
+			country_has_estate = estate_type:$estate$
+			any_owned_location = { is_capital = no NOT = { dominant_culture = root.culture } }
+		}
+		if = {
+			# already brewing: it is driven to the brink, and the game raises it itself
+			limit = { any_rebel = { estate_type ?= estate_type:$estate$ } }
+			random_rebel = {
+				limit = { estate_type ?= estate_type:$estate$ }
+				save_scope_as = votc_rising
+			}
+			every_owned_location = {
+				limit = { is_capital = no NOT = { dominant_culture = root.culture } }
+				every_pop = {
+					limit = { votc_pop_of_$estate$ = yes }
+					change_pop_allegiance = scope:votc_rising
+				}
+			}
+			var:$t$ ?= {
+				if = {
+					limit = { votc_may_join_rising = yes }
+					change_character_allegiance = scope:votc_rising
+				}
+			}
+			scope:votc_rising = { add_rebel_progress = 1 }
+		}
+		else = {
+			create_rebel = {
+				category = estate
+				estate = $estate$
+				save_scope_as = votc_rising
+			}
+			every_owned_location = {
+				limit = { is_capital = no NOT = { dominant_culture = root.culture } }
+				every_pop = {
+					limit = { votc_pop_of_$estate$ = yes }
+					change_pop_allegiance = scope:votc_rising
+				}
+			}
+			var:$t$ ?= {
+				if = {
+					limit = { votc_may_join_rising = yes }
+					change_character_allegiance = scope:votc_rising
+				}
+			}
+			scope:votc_rising = { start_civil_war = {} }
+		}
+	}
+}
+
+votc_order_revolt_other_faith = {
+	if = {
+		limit = {
+			country_has_estate = estate_type:$estate$
+			any_owned_location = { is_capital = no NOT = { dominant_religion = root.religion } }
+		}
+		votc_rising_of = { estate = $estate$ }
+		if = {
+			limit = { exists = scope:votc_rising }
+			every_owned_location = {
+				limit = { is_capital = no NOT = { dominant_religion = root.religion } }
+				every_pop = {
+					limit = { votc_pop_of_$estate$ = yes }
+					change_pop_allegiance = scope:votc_rising
+				}
+			}
+			var:$t$ ?= {
+				if = {
+					limit = { votc_may_join_rising = yes }
+					change_character_allegiance = scope:votc_rising
+				}
+			}
+			scope:votc_rising = { add_rebel_progress = 0.5 }
+		}
+	}
+}
+
+votc_order_civil_war_other_faith = {
+	if = {
+		limit = {
+			country_has_estate = estate_type:$estate$
+			any_owned_location = { is_capital = no NOT = { dominant_religion = root.religion } }
+		}
+		if = {
+			# already brewing: it is driven to the brink, and the game raises it itself
+			limit = { any_rebel = { estate_type ?= estate_type:$estate$ } }
+			random_rebel = {
+				limit = { estate_type ?= estate_type:$estate$ }
+				save_scope_as = votc_rising
+			}
+			every_owned_location = {
+				limit = { is_capital = no NOT = { dominant_religion = root.religion } }
+				every_pop = {
+					limit = { votc_pop_of_$estate$ = yes }
+					change_pop_allegiance = scope:votc_rising
+				}
+			}
+			var:$t$ ?= {
+				if = {
+					limit = { votc_may_join_rising = yes }
+					change_character_allegiance = scope:votc_rising
+				}
+			}
+			scope:votc_rising = { add_rebel_progress = 1 }
+		}
+		else = {
+			create_rebel = {
+				category = estate
+				estate = $estate$
+				save_scope_as = votc_rising
+			}
+			every_owned_location = {
+				limit = { is_capital = no NOT = { dominant_religion = root.religion } }
+				every_pop = {
+					limit = { votc_pop_of_$estate$ = yes }
+					change_pop_allegiance = scope:votc_rising
+				}
+			}
+			var:$t$ ?= {
+				if = {
+					limit = { votc_may_join_rising = yes }
+					change_character_allegiance = scope:votc_rising
+				}
+			}
+			scope:votc_rising = { start_civil_war = {} }
+		}
+	}
+}
+
+votc_order_revolt_low_control = {
+	if = {
+		limit = {
+			country_has_estate = estate_type:$estate$
+			any_owned_location = { is_capital = no local_control < 0.5 }
+		}
+		votc_rising_of = { estate = $estate$ }
+		if = {
+			limit = { exists = scope:votc_rising }
+			every_owned_location = {
+				limit = { is_capital = no local_control < 0.5 }
+				every_pop = {
+					limit = { votc_pop_of_$estate$ = yes }
+					change_pop_allegiance = scope:votc_rising
+				}
+			}
+			var:$t$ ?= {
+				if = {
+					limit = { votc_may_join_rising = yes }
+					change_character_allegiance = scope:votc_rising
+				}
+			}
+			scope:votc_rising = { add_rebel_progress = 0.5 }
+		}
+	}
+}
+
+votc_order_civil_war_low_control = {
+	if = {
+		limit = {
+			country_has_estate = estate_type:$estate$
+			any_owned_location = { is_capital = no local_control < 0.5 }
+		}
+		if = {
+			# already brewing: it is driven to the brink, and the game raises it itself
+			limit = { any_rebel = { estate_type ?= estate_type:$estate$ } }
+			random_rebel = {
+				limit = { estate_type ?= estate_type:$estate$ }
+				save_scope_as = votc_rising
+			}
+			every_owned_location = {
+				limit = { is_capital = no local_control < 0.5 }
+				every_pop = {
+					limit = { votc_pop_of_$estate$ = yes }
+					change_pop_allegiance = scope:votc_rising
+				}
+			}
+			var:$t$ ?= {
+				if = {
+					limit = { votc_may_join_rising = yes }
+					change_character_allegiance = scope:votc_rising
+				}
+			}
+			scope:votc_rising = { add_rebel_progress = 1 }
+		}
+		else = {
+			create_rebel = {
+				category = estate
+				estate = $estate$
+				save_scope_as = votc_rising
+			}
+			every_owned_location = {
+				limit = { is_capital = no local_control < 0.5 }
+				every_pop = {
+					limit = { votc_pop_of_$estate$ = yes }
+					change_pop_allegiance = scope:votc_rising
+				}
+			}
+			var:$t$ ?= {
+				if = {
+					limit = { votc_may_join_rising = yes }
+					change_character_allegiance = scope:votc_rising
+				}
+			}
+			scope:votc_rising = { start_civil_war = {} }
+		}
+	}
+}
+
+# ------------------------------------------------------------------ playing the rebels
+# The ruler chose to lead the rising. The civil war starts as above; the rebel
+# side becomes a country of its own, and once it exists Court Brain asks the
+# game to find it (votc_find_rebel_country, repeated until found). The bridge
+# then runs the console command "tag <its tag>" (debug mode, not ironman),
+# and the player plays on as the rebels.
+votc_join_rebels_request = {
+	set_global_variable = { name = votc_join_rebels value = 1 }
+}
+
+votc_find_rebel_country = {
+	if = {
+		limit = {
+			has_global_variable = votc_join_rebels
+			any_country = { is_rebel_country = yes is_at_war_with = root }
+		}
+		ordered_country = {
+			limit = { is_rebel_country = yes is_at_war_with = root }
+			order_by = army_size
+			position = 0
+			check_range_bounds = no
+			set_global_variable = { name = votc_switch_to value = this }
+		}
+		remove_global_variable = votc_join_rebels
+	}
+}

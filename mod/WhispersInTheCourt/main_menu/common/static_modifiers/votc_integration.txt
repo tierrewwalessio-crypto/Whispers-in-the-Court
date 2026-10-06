@@ -1,0 +1,9 @@
+﻿# Whispers in the Court - INTEGRATION. A place is bound to the realm by what the ruler does:
+# officials sent, oaths sworn, marriages made, charters and privileges granted, its own
+# people raised to office (courtbrain/works.py "integrate", and story choices).
+# Value: twice vanilla's strongest local bonus, for a directed effort that lasts ten years.
+
+votc_integration_drive = {
+	game_data = { category = location }
+	local_integration_speed_modifier = 0.5
+}

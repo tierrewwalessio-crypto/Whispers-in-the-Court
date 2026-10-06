@@ -1,0 +1,238 @@
+﻿# Whispers in the Court - what run/votc_in.txt may call.
+#
+# A mail file always looks like:
+#
+#   votc_in_open = yes
+#   <zero or more votc_act_* / votc_do_* lines>     the consequences
+#   <at most one votc_show_* line>                   the scene in game
+#   votc_in_close = yes                              (when a conversation ended)
+#
+# Nothing else is ever written there. The prose shown by the events lives in
+# main_menu/localization/english/votc_dynamic_l_english.yml, rewritten by the
+# middleware and reloaded by the bridge widget just before this file runs.
+
+# =====================================================================
+# Showing things in game
+# =====================================================================
+
+# The outcome of an audience, a council, an envoy or a progress.
+votc_show_outcome = {
+	votc_end_scene = yes
+	trigger_event_non_silently = votc.100
+}
+
+# A page of chronicle: nobody asked, the realm simply tells the player.
+# Events that come on their own (a page of chronicle, a story, someone at
+# the door) are hung on the game's calendar: they appear when the next day
+# ticks, so never while the game is paused, however long the AI took to
+# write them. What the player asked for (the outcome of a conversation) is
+# shown at once.
+votc_show_chronicle = {
+	trigger_event_non_silently = { id = votc.300 days = 1 }
+}
+
+# The reign has ended: the biographer's account of the ruler's life and works.
+votc_show_obituary = {
+	trigger_event_non_silently = { id = votc.110 days = 1 }
+}
+
+# A hundred years since the book began: the biographer offers the history of the century.
+votc_show_century = {
+	trigger_event_non_silently = { id = votc.120 days = 1 }
+}
+
+votc_show_arc = {
+	trigger_event_non_silently = { id = votc.500 days = 1 }
+}
+
+# Someone asks to be received. The target must be set first
+# (votc_in_target_*), so the option "receive them" knows who it is.
+votc_show_knock = {
+	trigger_event_non_silently = { id = votc.400 days = 1 }
+}
+
+# The middleware speaking for itself (Player2 unreachable, and so on).
+votc_show_notice = {
+	trigger_event_non_silently = votc.900
+}
+
+# EU5 was started without -debug_mode: no text of the court can reach the game.
+# A fixed text (loaded with the game), so it shows even then.
+votc_show_need_debug = {
+	trigger_event_non_silently = votc.920
+}
+
+# Last line of every mail: tells Court Brain the mail was executed, so it
+# never overwrites a mail the game has not read yet.
+votc_in_ack = {
+	set_variable = { name = votc_sig_ack value = 1 }
+}
+
+# =====================================================================
+# Choosing who a knock or a chronicle is about
+# =====================================================================
+#
+# The middleware cannot write a character down in script, so it names a
+# role and the game resolves who holds it now.
+
+votc_in_target_ruler = {
+	if = {
+		limit = { has_ruler = yes }
+		ruler ?= { save_scope_as = votc_pick }
+		set_variable = { name = votc_tchar value = scope:votc_pick }
+	}
+}
+
+votc_in_target_heir = {
+	if = {
+		limit = { has_heir = yes }
+		heir ?= { save_scope_as = votc_pick }
+		set_variable = { name = votc_tchar value = scope:votc_pick }
+	}
+}
+
+votc_in_target_cabinet = {
+	ordered_character = {
+		limit = { owner = root is_alive = yes in_cabinet = yes }
+		order_by = total_abilities
+		max = 1
+		save_scope_as = votc_pick
+	}
+	if = {
+		limit = { exists = scope:votc_pick }
+		set_variable = { name = votc_tchar value = scope:votc_pick }
+	}
+}
+
+votc_in_target_general = {
+	ordered_character = {
+		limit = { owner = root is_alive = yes is_general = yes }
+		order_by = total_abilities
+		max = 1
+		save_scope_as = votc_pick
+	}
+	if = {
+		limit = { exists = scope:votc_pick }
+		set_variable = { name = votc_tchar value = scope:votc_pick }
+	}
+}
+
+votc_in_target_courtier = {
+	random_character = {
+		limit = {
+			owner = root
+			is_alive = yes
+			is_adult = yes
+			is_ruler = no
+		}
+		save_scope_as = votc_pick
+	}
+	if = {
+		limit = { exists = scope:votc_pick }
+		set_variable = { name = votc_tchar value = scope:votc_pick }
+	}
+}
+
+# votc_in_target_p1 ... p6: one of the people parked by votc_prepare_context,
+# used when the player starts an audience from Court Brain's hub.
+
+votc_in_target_country = {
+	set_variable = { name = votc_tcountry value = $who$ }
+}
+
+votc_in_target_p1 = {
+	if = {
+		limit = { exists = var:votc_p1 }
+		set_variable = { name = votc_tchar value = var:votc_p1 }
+	}
+}
+
+votc_in_target_p2 = {
+	if = {
+		limit = { exists = var:votc_p2 }
+		set_variable = { name = votc_tchar value = var:votc_p2 }
+	}
+}
+
+votc_in_target_p3 = {
+	if = {
+		limit = { exists = var:votc_p3 }
+		set_variable = { name = votc_tchar value = var:votc_p3 }
+	}
+}
+
+votc_in_target_p4 = {
+	if = {
+		limit = { exists = var:votc_p4 }
+		set_variable = { name = votc_tchar value = var:votc_p4 }
+	}
+}
+
+votc_in_target_p5 = {
+	if = {
+		limit = { exists = var:votc_p5 }
+		set_variable = { name = votc_tchar value = var:votc_p5 }
+	}
+}
+
+votc_in_target_p6 = {
+	if = {
+		limit = { exists = var:votc_p6 }
+		set_variable = { name = votc_tchar value = var:votc_p6 }
+	}
+}
+
+# The person asking for an audience, kept apart from the talk target: the
+# knock waits a day on the calendar and a conversation in between must not
+# change who is at the door.
+votc_in_knocker_p1 = {
+	if = {
+		limit = { exists = var:votc_p1 }
+		set_variable = { name = votc_knocker value = var:votc_p1 }
+	}
+}
+votc_in_knocker_p2 = {
+	if = {
+		limit = { exists = var:votc_p2 }
+		set_variable = { name = votc_knocker value = var:votc_p2 }
+	}
+}
+votc_in_knocker_p3 = {
+	if = {
+		limit = { exists = var:votc_p3 }
+		set_variable = { name = votc_knocker value = var:votc_p3 }
+	}
+}
+votc_in_knocker_p4 = {
+	if = {
+		limit = { exists = var:votc_p4 }
+		set_variable = { name = votc_knocker value = var:votc_p4 }
+	}
+}
+votc_in_knocker_p5 = {
+	if = {
+		limit = { exists = var:votc_p5 }
+		set_variable = { name = votc_knocker value = var:votc_p5 }
+	}
+}
+votc_in_knocker_p6 = {
+	if = {
+		limit = { exists = var:votc_p6 }
+		set_variable = { name = votc_knocker value = var:votc_p6 }
+	}
+}
+
+# =====================================================================
+# Scenes and their text
+# =====================================================================
+# Each scene Court Brain sends is numbered; the number stays in the save.
+# When a save is loaded, Court Brain puts that scene's text back in place,
+# or - if it no longer has it - marks the scene as lost: its event then says
+# so plainly and applies nothing.
+votc_scene_mark = {
+	set_variable = { name = votc_scene_$kind$ value = $id$ }
+	remove_variable = votc_void_$kind$
+}
+votc_scene_void = {
+	set_variable = { name = votc_void_$kind$ value = 1 }
+}

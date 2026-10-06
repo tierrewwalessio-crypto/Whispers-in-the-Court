@@ -1,0 +1,58 @@
+﻿# Voices of the Court - talking to a person.
+#
+# A character interaction puts the button on the character panel itself, which
+# is why VotC needs no .gui overrides at all: no vanilla interface file is
+# touched, so the mod does not fight with other mods or with patches.
+#
+# scope:actor    = the player's country
+# scope:recipient = the person being addressed
+
+votc_speak_with = {
+	message = no
+	show_message = no
+	on_own_nation = yes
+	on_other_nation = yes
+
+	# Never the AI's to use. This is a player tool.
+	ai_tick = never
+
+	potential = {
+		scope:actor = {
+			is_human = yes
+			has_variable = votc_enabled
+		}
+	}
+
+	allow = {
+		scope:recipient ?= { is_alive = yes }
+	}
+
+	# Only consulted when the action is opened from the generic action list;
+	# clicking the button on someone's panel fills scope:recipient directly.
+	select_trigger = {
+		looking_for_a = character
+		source = actor
+		target_flag = recipient
+		name = "votc_choose_person"
+		cache_targets = no
+		column = { data = name }
+		visible = {
+			is_alive = yes
+		}
+		enabled = {
+			is_adult = yes
+		}
+	}
+
+	# Three days between audiences, so a conversation stays an occasion.
+	cooldown = {
+		type = votc_talk
+		days = 3
+	}
+
+	effect = {
+		scope:actor = {
+			votc_begin_talk = { who = scope:recipient topic = 0 }
+		}
+	}
+}

@@ -1,0 +1,29 @@
+# Build output: the exe is published as a release asset, not committed.
+/build/
+/dist/
+/WhispersInTheCourt.exe
+*.spec
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Local settings when Court Brain runs from the sources. They may hold API keys:
+# never commit them. config.example.json is the template.
+tools/court_brain/config.json
+tools/court_brain/instructions.json
+
+# Logs, campaign memory and saves written while testing
+*.log
+*.tmp
+logs/
+*.eu5
+
+# Editors and operating systems
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
+.DS_Store

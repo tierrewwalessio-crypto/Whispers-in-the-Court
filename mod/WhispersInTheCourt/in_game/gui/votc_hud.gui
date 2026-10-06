@@ -1,0 +1,33 @@
+﻿# Whispers in the Court - the only visible pieces of in-game interface: two small
+# buttons under the country header.
+#   Corte        opens Court Brain's hub (council, decree, chronicle)
+#   Consigliere  opens the AI advisor, who talks to the PLAYER directly, out
+#                of character: questions, advice, reports on the campaign.
+# Everything else lives on the native panels (character, foreign country,
+# own country) as interactions.
+window = {
+	name = "votc_hud"
+	layer = topbar
+	parentanchor = top|left
+	position = { 8 136 }
+	size = { 236 34 }
+	allow_outside = yes
+	datacontext = "[GetPlayer]"
+	visible = "[GetPlayer.IsValid]"
+
+	button_regular = {
+		position = { 0 0 }
+		size = { 110 34 }
+		text = "VOTC_HUD_BUTTON"
+		tooltip = "VOTC_HUD_BUTTON_TT"
+		onclick = "[ExecuteConsoleCommand(Localize('votc_cmd_hub'))]"
+	}
+
+	button_regular = {
+		position = { 116 0 }
+		size = { 120 34 }
+		text = "VOTC_ADVISOR_BUTTON"
+		tooltip = "VOTC_ADVISOR_BUTTON_TT"
+		onclick = "[ExecuteConsoleCommand(Localize('votc_cmd_advisor'))]"
+	}
+}

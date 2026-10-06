@@ -1,0 +1,38 @@
+# OPTIONAL - not installed by default.
+#
+# Copy this file into
+#   mod/VoicesOfTheCourt/in_game/common/on_action/
+# only if you want Court Brain to be woken by the game every month instead of
+# once a year plus whenever you interact with the court.
+#
+# THE COST: this block redefines monthly_country_pulse, which vanilla already
+# defines in game/in_game/common/on_action/country_monthly.txt with a list of
+# on_actions and a table of random events (empires.1-3, border_friction.1-2,
+# and more). Jomini games normally MERGE on_action entries with the same key,
+# in which case nothing is lost - but EU5 defines each on_action exactly once
+# in vanilla, so there is no in-game proof of that behaviour to point at.
+#
+# If merging does not happen, you lose vanilla's monthly country pulse
+# content for every country in the game. That is not a trade the mod is
+# willing to make for you.
+#
+# HOW TO CHECK, if you install it: start a game, then look at
+#   Documents/Paradox Interactive/Europa Universalis V/logs/database_conflicts.log
+# and search logs/error.log for "monthly_country_pulse". If either complains,
+# delete this file again.
+
+monthly_country_pulse = {
+	on_actions = {
+		votc_monthly_hook
+	}
+}
+
+votc_monthly_hook = {
+	trigger = {
+		is_human = yes
+		has_variable = votc_enabled
+	}
+	effect = {
+		votc_pulse = yes
+	}
+}

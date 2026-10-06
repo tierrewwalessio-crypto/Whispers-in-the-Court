@@ -1,0 +1,46 @@
+﻿# Whispers in the Court - CONVERSION OF THE PEOPLE. A state may change its faith in a
+# day; its people do not. A work that converts people (convert_religion,
+# convert_culture) wins a first share of them at once, then works on the rest for
+# years - toward the state's own faith or culture, where the realm's own pull helps -
+# and may meet resistance. A new state faith starts the same slow tide across the
+# realm. How large the first share is, how long the effort lasts and how hard the
+# people resist follow the ruler's skill (Court Brain: works.conversion_plan).
+# Values: around vanilla's own for each modifier.
+
+# Preachers, missions and the Crown's favour for the faith, place by place.
+votc_conversion_drive = {
+	game_data = { category = location }
+	local_pop_conversion_speed_modifier = 0.5
+}
+
+# Schools, offices and marriages that carry the new ways, place by place.
+votc_assimilation_drive = {
+	game_data = { category = location }
+	local_pop_assimilation_speed_modifier = 0.5
+}
+
+# The people resist what is pressed on them.
+votc_conversion_unrest_mild = {
+	game_data = { category = location }
+	local_unrest = 0.25
+}
+votc_conversion_unrest_severe = {
+	game_data = { category = location }
+	local_unrest = 0.5
+}
+
+# A new state faith: its clergy and the Crown's favour carry it across the realm.
+votc_new_faith_zeal = {
+	game_data = { category = country }
+	global_pop_conversion_speed_modifier = 0.25
+}
+
+# Those who keep the old faith gather against the Crown.
+votc_faith_resistance_mild = {
+	game_data = { category = country }
+	monthly_religious_rebel_growth = 0.01
+}
+votc_faith_resistance_severe = {
+	game_data = { category = country }
+	monthly_religious_rebel_growth = 0.02
+}

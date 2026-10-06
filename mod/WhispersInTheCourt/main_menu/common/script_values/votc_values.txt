@@ -1,0 +1,178 @@
+﻿# Whispers in the Court - balance envelope.
+#
+# ONE source of truth for every magnitude the AI is allowed to move.
+# The middleware (Court Brain) mirrors these numbers, but the game clamps
+# again here, so a hallucinating model can never exceed the envelope.
+#
+# All the *_weak_* / *_mild_* / *_severe_* constants used by the action
+# catalogue come from vanilla (main_menu/common/script_values/default_values.txt)
+# so a VotC outcome is always the size of an ordinary vanilla event outcome.
+
+# ----------------------------------------------------------- influence budget
+# The AI spends "court influence" to change the world. It regenerates monthly
+# and is capped, so a long AI session cannot snowball.
+votc_budget_max            = 100
+votc_budget_monthly_regen  = 25
+votc_budget_start          = 50
+
+# Cost per action tier. severe is deliberately expensive.
+# Each cost has a negative twin because change_variable only takes a plain
+# script value, and vanilla only ever writes literal negatives there
+# (change_variable = { name = x add = -1 }), so we keep to that shape.
+votc_cost_weak   = 5
+votc_cost_mild   = 12
+votc_cost_severe = 30
+votc_cost_weak_neg   = -5
+votc_cost_mild_neg   = -12
+votc_cost_severe_neg = -30
+votc_cost_slight     = 2
+votc_cost_slight_neg = -2
+
+# The SLIGHT tier, below vanilla's weak: the small change a small thing makes (a page of
+# chronicle, a petty grievance). Vanilla has no such tier; these follow its naming so the
+# action effects can read them as stability_$tier$_$sign$ and so on.
+stability_slight_penalty = -1
+stability_slight_bonus = 1
+prestige_slight_penalty = -2
+prestige_slight_bonus = 2
+legitimacy_slight_penalty = -2
+legitimacy_slight_bonus = 2
+government_power_slight_penalty = -1
+government_power_slight_bonus = 1
+estate_satisfaction_slight_penalty = -0.02
+estate_satisfaction_slight_bonus = 0.02
+
+# Cost of the structural actions.
+votc_cost_edict           = 25
+votc_cost_privilege       = 35
+votc_cost_opinion         = 10
+votc_cost_societal        = 20
+votc_cost_char_modifier   = 15
+# Outcomes between crowns. Priced far above anything domestic: with a cap of
+# votc_budget_max the AI can stage at most one war every few years, and a
+# subjugation only out of a completely untouched budget.
+votc_cost_war        = 60
+votc_cost_peace      = 45
+votc_cost_pact       = 40
+votc_cost_subjugate  = 100
+votc_cost_cb         = 25
+votc_cost_truce      = 20
+votc_cost_gift       = 15
+votc_cost_rival      = 10
+votc_cost_war_neg        = -60
+votc_cost_peace_neg      = -45
+votc_cost_pact_neg       = -40
+votc_cost_subjugate_neg  = -100
+votc_cost_cb_neg         = -25
+votc_cost_truce_neg      = -20
+votc_cost_gift_neg       = -15
+votc_cost_rival_neg      = -10
+
+votc_cost_edict_neg           = -25
+
+# Policies (votc_act_policy). A bonus is paid for by strength; a penalty is
+# a consequence, not a purchase, and costs only the minimum.
+votc_cost_policy_bonus_weak     = 10
+votc_cost_policy_bonus_mild     = 20
+votc_cost_policy_bonus_severe   = 35
+votc_cost_policy_bonus_grand    = 50
+votc_cost_policy_bonus_grand_neg = -50
+votc_cost_policy_penalty_weak   = 5
+votc_cost_policy_penalty_mild   = 5
+votc_cost_policy_penalty_severe = 5
+votc_cost_policy_bonus_weak_neg     = -10
+votc_cost_policy_bonus_mild_neg     = -20
+votc_cost_policy_bonus_severe_neg   = -35
+votc_cost_policy_penalty_weak_neg   = -5
+votc_cost_policy_penalty_mild_neg   = -5
+votc_cost_policy_penalty_severe_neg = -5
+votc_cost_privilege_neg       = -35
+votc_cost_opinion_neg         = -10
+votc_cost_societal_neg        = -20
+votc_cost_char_modifier_neg   = -15
+
+# ------------------------------------------------------------------ cooldowns
+# Days between two AI-driven pushes of the same kind. Keeps the mod from
+# turning into an event spam machine.
+votc_cd_chronicle_days   = 20
+votc_cd_knock_days       = 45
+votc_cd_council_days     = 180
+votc_cd_progress_days    = 365
+votc_cd_talk_days        = 5
+
+# ------------------------------------------------------------------ gold band
+# Gold moved by a scene - given, spent, paid, taken - is never a flat number.
+# It follows three things, so that it stays in proportion for every realm:
+#  - its economy: a fraction of the tax base (read as vanilla reads it in
+#    common/country_interactions/ask_for_money.txt);
+#  - what its chest already holds: a small share of the treasury on top - a rich
+#    Crown gives and spends more, an empty one does not (never below nothing);
+#  - what the realms of its rank hold: never more than a share of their usual
+#    treasury (var:votc_peer_gold, the median of its peers, written by Court Brain
+#    from the latest save), so a hoard does not make sums absurd for the world.
+votc_gold_weak = {
+	value = country_tax_base
+	multiply = 0.25
+	add = { value = gold multiply = 0.02 min = 0 }
+	if = {
+		limit = { has_variable = votc_peer_gold }
+		max = { value = var:votc_peer_gold multiply = 0.15 min = 5 }
+	}
+	min = 1
+	max = 300
+	round = yes
+}
+votc_gold_mild = {
+	value = country_tax_base
+	multiply = 0.75
+	add = { value = gold multiply = 0.05 min = 0 }
+	if = {
+		limit = { has_variable = votc_peer_gold }
+		max = { value = var:votc_peer_gold multiply = 0.4 min = 15 }
+	}
+	min = 3
+	max = 900
+	round = yes
+}
+votc_gold_severe = {
+	value = country_tax_base
+	multiply = 2
+	add = { value = gold multiply = 0.12 min = 0 }
+	if = {
+		limit = { has_variable = votc_peer_gold }
+		max = { value = var:votc_peer_gold multiply = 1 min = 40 }
+	}
+	min = 10
+	max = 2500
+	round = yes
+}
+
+# ---------------------------------------------------------------- manpower band
+# The game counts manpower in THOUSANDS (vanilla gives add_manpower = 0.1 or half a
+# month's recruits). A band is some months of the realm's own recruits, with small
+# floors: the minimums of 10 / 50 / 150 here once meant 10,000 - 150,000 men, far
+# beyond a small realm's reserve. The game never lets it pass the realm's maximum.
+votc_manpower_weak = {
+	value = monthly_manpower
+	multiply = 2
+	min = 0.05
+	max = 5
+}
+votc_manpower_mild = {
+	value = monthly_manpower
+	multiply = 6
+	min = 0.2
+	max = 15
+}
+votc_manpower_severe = {
+	value = monthly_manpower
+	multiply = 15
+	min = 0.5
+	max = 40
+}
+
+# -------------------------------------------------------------- session limits
+# Hard ceiling on how many exchanges a single conversation can run, and on how
+# many actions a single scene may apply.
+votc_max_turns_per_talk    = 12
+votc_max_actions_per_scene = 3

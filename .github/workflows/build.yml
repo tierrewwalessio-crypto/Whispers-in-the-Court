@@ -1,0 +1,55 @@
+# Builds WhispersInTheCourt.exe from the sources.
+# - every push and pull request: checks the mod and Court Brain, and builds the exe
+#   (downloadable from the run's page);
+# - a tag such as v0.7.0: also publishes a GitHub release with the exe and its SHA-256.
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Check that Court Brain compiles
+        run: python -m compileall -q tools
+
+      - name: Build the exe (checks the mod first)
+        run: python tools/build_exe.py
+
+      - name: SHA-256
+        shell: pwsh
+        run: |
+          $hash = (Get-FileHash dist/WhispersInTheCourt.exe -Algorithm SHA256).Hash.ToLower()
+          "$hash  WhispersInTheCourt.exe" | Out-File -Encoding ascii dist/WhispersInTheCourt.exe.sha256
+          "SHA-256: $hash"
+          "## WhispersInTheCourt.exe`n`nSHA-256: ``$hash``" >> $env:GITHUB_STEP_SUMMARY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WhispersInTheCourt
+          path: |
+            dist/WhispersInTheCourt.exe
+            dist/WhispersInTheCourt.exe.sha256
+
+      - name: Publish the release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/WhispersInTheCourt.exe
+            dist/WhispersInTheCourt.exe.sha256
+          generate_release_notes: true

@@ -1,0 +1,659 @@
+﻿# Whispers in the Court - core.
+#
+# HOW THE GAME TALKS TO COURT BRAIN (all verified in EU5 1.3.11, release build)
+#
+#   game -> middleware
+#     A script effect raises a SIGNAL variable on the player country.
+#     The invisible widget in gui/votc_bridge.gui watches those variables
+#     (state trigger_when). When one goes up it runs, through
+#     ExecuteConsoleCommandsForced, a list of "votc_say ..." commands built
+#     from localisation templates full of data functions. votc_say is not a
+#     real command: it fails harmlessly, but the console writes every command
+#     it receives to Documents/.../console_history.txt, which Court Brain
+#     tails. The last command of the list lowers the signal again.
+#
+#   middleware -> game
+#     Court Brain writes run/votc_poll.txt and run/votc_in.txt. The bridge
+#     widget runs votc_poll.txt every few seconds; when it announces new mail
+#     (votc_mail), the widget reloads localisation if needed and runs
+#     votc_in.txt, which applies the consequences and fires the events.
+#
+# The script-side logging effects (debug_log, error_log) documented in the
+# executable do NOT exist in the release build, which is why none are used.
+#
+# Scope convention: country scope, the human player, unless stated.
+
+# =====================================================================
+# Bookkeeping
+# =====================================================================
+
+votc_init_vars = {
+	if = { limit = { NOT = { has_variable = votc_budget } } set_variable = { name = votc_budget value = votc_budget_start } }
+	if = { limit = { NOT = { has_variable = votc_mail_seq } } set_variable = { name = votc_mail_seq value = 0 } }
+	if = { limit = { NOT = { has_variable = votc_scene_actions } } set_variable = { name = votc_scene_actions value = 0 } }
+	if = { limit = { NOT = { has_variable = votc_scene_spent } } set_variable = { name = votc_scene_spent value = 0 } }
+	if = { limit = { NOT = { has_variable = votc_spend_ok } } set_variable = { name = votc_spend_ok value = 0 } }
+	if = { limit = { NOT = { has_variable = votc_refusals } } set_variable = { name = votc_refusals value = 0 } }
+	if = { limit = { NOT = { has_variable = votc_agenda } } set_variable = { name = votc_agenda value = 0 } }
+}
+
+# =====================================================================
+# Context preparation
+# =====================================================================
+#
+# The localisation templates can only follow variables, not iterate lists,
+# so the people the model should know about are parked in variables first.
+# Empty slots are filled with the ruler; Court Brain drops duplicates.
+
+votc_prepare_context = {
+	save_scope_as = votc_country
+	votc_init_vars = yes
+	votc_regen_budget = yes
+
+	# EU5 does not let an effect read back a variable it set a moment ago, so
+	# nothing below reads what it writes: each slot is filled directly from
+	# the nth best person (vanilla does the same with position = N in
+	# common/scripted_effects/situation_effects.txt).
+	if = {
+		limit = { has_ruler = yes }
+		ruler ?= { scope:votc_country = { set_variable = { name = votc_ruler value = prev } } }
+	}
+	if = {
+		limit = { has_heir = yes }
+		heir ?= { scope:votc_country = { set_variable = { name = votc_heir value = prev } } }
+	}
+	else_if = {
+		limit = { has_ruler = yes }
+		ruler ?= { scope:votc_country = { set_variable = { name = votc_heir value = prev } } }
+	}
+
+	# Clear the six slots to the ruler first; real people overwrite them.
+	if = {
+		limit = { has_ruler = yes }
+		ruler ?= {
+			scope:votc_country = {
+				set_variable = { name = votc_p1 value = prev }
+				set_variable = { name = votc_p2 value = prev }
+				set_variable = { name = votc_p3 value = prev }
+				set_variable = { name = votc_p4 value = prev }
+				set_variable = { name = votc_p5 value = prev }
+				set_variable = { name = votc_p6 value = prev }
+			}
+		}
+	}
+	ordered_character = {
+		limit = {
+			owner = scope:votc_country
+			is_alive = yes
+			is_adult = yes
+			is_ruler = no
+			OR = { in_cabinet = yes is_general = yes is_admiral = yes is_heir = yes is_regent = yes }
+		}
+		order_by = total_abilities
+		position = 0
+		check_range_bounds = no
+		scope:votc_country = { set_variable = { name = votc_p1 value = prev } }
+	}
+	if = {
+		limit = {
+			any_character = {
+				count >= 2
+				owner = scope:votc_country
+				is_alive = yes
+				is_adult = yes
+				is_ruler = no
+				OR = { in_cabinet = yes is_general = yes is_admiral = yes is_heir = yes is_regent = yes }
+			}
+		}
+		ordered_character = {
+			limit = {
+				owner = scope:votc_country
+				is_alive = yes
+				is_adult = yes
+				is_ruler = no
+				OR = { in_cabinet = yes is_general = yes is_admiral = yes is_heir = yes is_regent = yes }
+			}
+			order_by = total_abilities
+			position = 1
+			check_range_bounds = no
+			scope:votc_country = { set_variable = { name = votc_p2 value = prev } }
+		}
+	}
+	if = {
+		limit = {
+			any_character = {
+				count >= 3
+				owner = scope:votc_country
+				is_alive = yes
+				is_adult = yes
+				is_ruler = no
+				OR = { in_cabinet = yes is_general = yes is_admiral = yes is_heir = yes is_regent = yes }
+			}
+		}
+		ordered_character = {
+			limit = {
+				owner = scope:votc_country
+				is_alive = yes
+				is_adult = yes
+				is_ruler = no
+				OR = { in_cabinet = yes is_general = yes is_admiral = yes is_heir = yes is_regent = yes }
+			}
+			order_by = total_abilities
+			position = 2
+			check_range_bounds = no
+			scope:votc_country = { set_variable = { name = votc_p3 value = prev } }
+		}
+	}
+	if = {
+		limit = {
+			any_character = {
+				count >= 4
+				owner = scope:votc_country
+				is_alive = yes
+				is_adult = yes
+				is_ruler = no
+				OR = { in_cabinet = yes is_general = yes is_admiral = yes is_heir = yes is_regent = yes }
+			}
+		}
+		ordered_character = {
+			limit = {
+				owner = scope:votc_country
+				is_alive = yes
+				is_adult = yes
+				is_ruler = no
+				OR = { in_cabinet = yes is_general = yes is_admiral = yes is_heir = yes is_regent = yes }
+			}
+			order_by = total_abilities
+			position = 3
+			check_range_bounds = no
+			scope:votc_country = { set_variable = { name = votc_p4 value = prev } }
+		}
+	}
+	if = {
+		limit = {
+			any_character = {
+				count >= 5
+				owner = scope:votc_country
+				is_alive = yes
+				is_adult = yes
+				is_ruler = no
+				OR = { in_cabinet = yes is_general = yes is_admiral = yes is_heir = yes is_regent = yes }
+			}
+		}
+		ordered_character = {
+			limit = {
+				owner = scope:votc_country
+				is_alive = yes
+				is_adult = yes
+				is_ruler = no
+				OR = { in_cabinet = yes is_general = yes is_admiral = yes is_heir = yes is_regent = yes }
+			}
+			order_by = total_abilities
+			position = 4
+			check_range_bounds = no
+			scope:votc_country = { set_variable = { name = votc_p5 value = prev } }
+		}
+	}
+	if = {
+		limit = {
+			any_character = {
+				count >= 6
+				owner = scope:votc_country
+				is_alive = yes
+				is_adult = yes
+				is_ruler = no
+				OR = { in_cabinet = yes is_general = yes is_admiral = yes is_heir = yes is_regent = yes }
+			}
+		}
+		ordered_character = {
+			limit = {
+				owner = scope:votc_country
+				is_alive = yes
+				is_adult = yes
+				is_ruler = no
+				OR = { in_cabinet = yes is_general = yes is_admiral = yes is_heir = yes is_regent = yes }
+			}
+			order_by = total_abilities
+			position = 5
+			check_range_bounds = no
+			scope:votc_country = { set_variable = { name = votc_p6 value = prev } }
+		}
+	}
+}
+
+# =====================================================================
+# Signals - one variable per kind, so the bridge widget can use a
+# separate, simple watcher (and a separate template) for each
+# =====================================================================
+
+# Talk to a character. $who$ = the character.
+votc_signal_talk = {
+	set_variable = { name = votc_tchar value = $who$ }
+	votc_prepare_context = yes
+	set_variable = { name = votc_awaiting value = 1 }
+	votc_poll_fast_on = yes
+	set_variable = { name = votc_sig_talk value = 1 }
+}
+
+# Speak with a foreign court. $who$ = the country; $mode$ = 1 envoy,
+# 2 meeting in person, 3 state visit (carried to Court Brain as the agenda).
+votc_signal_envoy = {
+	set_variable = { name = votc_tcountry value = $who$ }
+	set_variable = { name = votc_agenda value = $mode$ }
+	if = {
+		limit = { $who$ = { has_ruler = yes } }
+		$who$ = { ruler ?= { save_scope_as = votc_pick_foreign_ruler } }
+		set_variable = { name = votc_tchar value = scope:votc_pick_foreign_ruler }
+	}
+	votc_prepare_context = yes
+	set_variable = { name = votc_awaiting value = 1 }
+	votc_poll_fast_on = yes
+	set_variable = { name = votc_sig_envoy value = 1 }
+}
+
+# The Crown Council. $agenda$ = 0 general, 1-7 one estate (see ESTATES order).
+votc_signal_council = {
+	set_variable = { name = votc_agenda value = $agenda$ }
+	votc_prepare_context = yes
+	set_variable = { name = votc_awaiting value = 1 }
+	votc_poll_fast_on = yes
+	set_variable = { name = votc_sig_council value = 1 }
+}
+
+# The royal progress. $where$ = the location.
+votc_signal_progress = {
+	set_variable = { name = votc_tlocation value = $where$ }
+	votc_prepare_context = yes
+	set_variable = { name = votc_awaiting value = 1 }
+	votc_poll_fast_on = yes
+	set_variable = { name = votc_sig_progress value = 1 }
+}
+
+# The player wants to answer a scene in their own words. The middleware knows
+# which scene it last sent, so no further detail travels. The agenda is reset,
+# so a reply never opens as the biographer's audience below.
+votc_signal_reply = {
+	votc_prepare_context = yes
+	set_variable = { name = votc_agenda value = 0 }
+	set_variable = { name = votc_awaiting value = 1 }
+	votc_poll_fast_on = yes
+	set_variable = { name = votc_sig_reply value = 1 }
+}
+
+# The player goes to speak with the royal biographer about the page just
+# written (or from the Court menu): a reply with agenda 88.
+votc_signal_biographer = {
+	votc_prepare_context = yes
+	set_variable = { name = votc_agenda value = 88 }
+	set_variable = { name = votc_awaiting value = 1 }
+	votc_poll_fast_on = yes
+	set_variable = { name = votc_sig_reply value = 1 }
+}
+
+# The ruler opens the book of their Life, as the biographers have written it
+# so far (agenda 89), or the whole Life of the ruler just dead (agenda 90).
+votc_signal_book = {
+	votc_prepare_context = yes
+	set_variable = { name = votc_agenda value = 89 }
+	set_variable = { name = votc_awaiting value = 1 }
+	votc_poll_fast_on = yes
+	set_variable = { name = votc_sig_reply value = 1 }
+}
+votc_signal_life = {
+	votc_prepare_context = yes
+	set_variable = { name = votc_agenda value = 90 }
+	set_variable = { name = votc_awaiting value = 1 }
+	votc_poll_fast_on = yes
+	set_variable = { name = votc_sig_reply value = 1 }
+}
+
+# A hundred years of the realm: the biographer reads its history (agenda 91).
+votc_signal_century = {
+	votc_prepare_context = yes
+	set_variable = { name = votc_agenda value = 91 }
+	set_variable = { name = votc_awaiting value = 1 }
+	votc_poll_fast_on = yes
+	set_variable = { name = votc_sig_reply value = 1 }
+}
+
+# The ruler answered a story event. choice = 1..3, or 9 = "answer in person".
+votc_signal_arc = {
+	votc_prepare_context = yes
+	set_variable = { name = votc_agenda value = $choice$ }
+	votc_poll_fast_on = yes
+	set_variable = { name = votc_sig_arc value = 1 }
+}
+
+# The ruler issues a decree without consulting anyone first.
+votc_signal_decree = {
+	votc_prepare_context = yes
+	set_variable = { name = votc_awaiting value = 1 }
+	votc_poll_fast_on = yes
+	set_variable = { name = votc_sig_decree value = 1 }
+}
+
+# The "Corte" button on the HUD: opens Court Brain's hub.
+votc_signal_hub = {
+	votc_prepare_context = yes
+	votc_prepare_live = yes
+	votc_poll_fast_on = yes
+	set_variable = { name = votc_sig_hub value = 1 }
+}
+
+# The AI advisor (out of character). Nothing waits in game for it, so no
+# votc_awaiting: the player can keep playing while they talk to it.
+votc_signal_advisor = {
+	votc_prepare_context = yes
+	votc_prepare_live = yes
+	votc_poll_fast_on = yes
+	set_variable = { name = votc_sig_advisor value = 1 }
+}
+
+# A context refresh the middleware asked for (heartbeat).
+votc_signal_pulse = {
+	votc_prepare_context = yes
+	votc_prepare_live = yes
+	set_variable = { name = votc_sig_pulse value = 1 }
+}
+
+# The bridge polls for mail every 3 seconds while this is raised, and every 12 seconds
+# otherwise: in debug mode every console command costs the game a moment, and most of
+# the time nothing is on its way. Raised by every signal of the player (an answer is
+# coming) and by Court Brain whenever it has more to send; lowered by Court Brain's
+# last mail when it has nothing more to say.
+votc_poll_fast_on = {
+	set_variable = { name = votc_poll_fast value = 1 }
+}
+votc_poll_fast_off = {
+	remove_variable = votc_poll_fast
+}
+
+# =====================================================================
+# Mail from the middleware
+# =====================================================================
+
+# Written into run/votc_poll.txt by Court Brain. The poll runs every few
+# seconds; the sequence guard makes a repeated poll of the same mail a no-op.
+# Two variants because argument substitution is textual ("1 = 1" is not a
+# trigger): votc_mail_loc also asks for a localisation reload, which is how
+# new AI-written text reaches the events.
+votc_mail = {
+	votc_init_vars = yes
+	if = {
+		limit = { var:votc_mail_seq < $seq$ }
+		set_variable = { name = votc_mail_seq value = $seq$ }
+		set_variable = { name = votc_has_mail value = 1 }
+	}
+}
+
+votc_mail_loc = {
+	votc_init_vars = yes
+	if = {
+		limit = { var:votc_mail_seq < $seq$ }
+		set_variable = { name = votc_mail_seq value = $seq$ }
+		votc_request_reload = yes
+	}
+}
+
+votc_mail_save = {
+	votc_init_vars = yes
+	if = {
+		limit = { var:votc_mail_seq < $seq$ }
+		set_variable = { name = votc_mail_seq value = $seq$ }
+		set_variable = { name = votc_has_mail_save value = 1 }
+	}
+}
+
+# First line of run/votc_in.txt.
+votc_in_open = {
+	votc_init_vars = yes
+	remove_variable = votc_has_mail
+	remove_variable = votc_has_mail_loc
+	remove_variable = votc_has_mail_loc_b
+	remove_variable = votc_has_mail_save
+	set_variable = { name = votc_scene_actions value = 0 }
+	set_variable = { name = votc_scene_spent value = 0 }
+}
+
+# The conversation is over; the bridge can poll slowly again.
+votc_in_close = {
+	remove_variable = votc_awaiting
+}
+
+# =====================================================================
+# Budget
+# =====================================================================
+
+# Regenerates by ELAPSED GAME MONTHS, not by how often it is called.
+votc_regen_budget = {
+	# First ever call: only record the month. Reading the variables back is
+	# left to the next call, because EU5 will not show them to this one.
+	if = {
+		limit = { NOT = { has_variable = votc_last_regen } }
+		set_variable = { name = votc_last_regen value = votc_abs_month }
+	}
+	else_if = {
+		limit = {
+			has_variable = votc_budget
+			var:votc_last_regen < votc_abs_month
+		}
+		set_variable = {
+			name = votc_budget
+			value = {
+				value = votc_abs_month
+				subtract = var:votc_last_regen
+				multiply = votc_budget_monthly_regen
+				add = var:votc_budget
+				max = votc_budget_max
+			}
+		}
+		set_variable = { name = votc_last_regen value = votc_abs_month }
+	}
+}
+
+# =====================================================================
+# Estate audience helper
+# =====================================================================
+
+votc_signal_estate = {
+	if = {
+		limit = { scope:target ?= { estate_type = estate_type:nobles_estate } }
+		votc_signal_council = { agenda = 1 }
+	}
+	else_if = {
+		limit = { scope:target ?= { estate_type = estate_type:clergy_estate } }
+		votc_signal_council = { agenda = 2 }
+	}
+	else_if = {
+		limit = { scope:target ?= { estate_type = estate_type:burghers_estate } }
+		votc_signal_council = { agenda = 3 }
+	}
+	else_if = {
+		limit = { scope:target ?= { estate_type = estate_type:peasants_estate } }
+		votc_signal_council = { agenda = 4 }
+	}
+	else_if = {
+		limit = { scope:target ?= { estate_type = estate_type:tribes_estate } }
+		votc_signal_council = { agenda = 5 }
+	}
+	else_if = {
+		limit = { scope:target ?= { estate_type = estate_type:dhimmi_estate } }
+		votc_signal_council = { agenda = 6 }
+	}
+	else_if = {
+		limit = { scope:target ?= { estate_type = estate_type:cossacks_estate } }
+		votc_signal_council = { agenda = 7 }
+	}
+	else = {
+		votc_signal_council = { agenda = 0 }
+	}
+}
+
+# =====================================================================
+# Which campaign, and where its memory stands
+# =====================================================================
+#
+# Two GLOBAL variables, so they travel inside every save file:
+#   votc_campaign  a number Court Brain picks the first time it sees a game
+#   votc_memhead   the last entry of Court Brain's memory journal this game
+#                  state has seen
+# Load an older save and the game reports the older head: Court Brain then
+# remembers exactly what had happened up to that save and nothing after it.
+# Written by the middleware at the top of every mail.
+
+votc_set_campaign = {
+	# Only ever on a game that has none: a mail written for one game must
+	# never relabel another the player has just loaded.
+	if = {
+		limit = { NOT = { has_global_variable = votc_campaign } }
+		set_global_variable = { name = votc_campaign value = $id$ }
+		set_global_variable = { name = votc_memhead value = $head$ }
+	}
+}
+
+votc_set_memhead = {
+	# Moves the head forward only if this is still the game, and the point
+	# of the journal, the mail was written for. If the player loaded a save
+	# in the meantime the numbers differ and nothing is touched.
+	if = {
+		limit = {
+			has_global_variable = votc_campaign
+			has_global_variable = votc_memhead
+			global_var:votc_campaign = $campaign$
+			global_var:votc_memhead = $from$
+		}
+		set_global_variable = { name = votc_memhead value = $head$ }
+	}
+}
+
+# =====================================================================
+# Mail, version 3: the mail IS the poll file
+# =====================================================================
+#
+# run/votc_poll.txt holds
+#     if = { limit = { votc_mail_is_new = { seq = N } } votc_mail_open = { seq = N } ... }
+# so each mail runs exactly once, inside the poll's own console command.
+
+votc_mail_open = {
+	votc_init_vars = yes
+	set_variable = { name = votc_mail_seq value = $seq$ }
+	set_variable = { name = votc_scene_actions value = 0 }
+	set_variable = { name = votc_scene_spent value = 0 }
+}
+
+# The mail carries new text: the bridge reloads the localisation, then calls
+# votc_loc_done, whose acknowledgement tells Court Brain the text is in.
+# The bridge fires only when a flag goes UP. A reload the console once refused
+# used to leave the flag up - saved with the game - and no text ever loaded
+# again in that campaign. So every request raises the OTHER of two flags: one
+# stuck flag can never block the next reload.
+votc_request_reload = {
+	if = {
+		limit = { has_variable = votc_has_mail_loc }
+		remove_variable = votc_has_mail_loc
+		set_variable = { name = votc_has_mail_loc_b value = 1 }
+	}
+	else = {
+		remove_variable = votc_has_mail_loc_b
+		set_variable = { name = votc_has_mail_loc value = 1 }
+	}
+}
+
+votc_loc_done = {
+	remove_variable = votc_has_mail_loc
+	remove_variable = votc_has_mail_loc_b
+	set_variable = { name = votc_sig_ack value = 1 }
+}
+
+# A game just loaded: whatever was left raised by an earlier session is lowered,
+# so that the first mail's flags go up cleanly.
+votc_bridge_reset = {
+	votc_poll_fast_on = yes           # a game just loaded: Court Brain has things to say
+	remove_variable = votc_has_mail_loc
+	remove_variable = votc_has_mail_loc_b
+	remove_variable = votc_has_mail_loc_stuck
+	remove_variable = votc_has_mail_loc_retry
+	remove_variable = votc_has_mail_save
+	remove_variable = votc_has_mail_logs
+	remove_variable = votc_sig_ack
+}
+
+votc_request_save = {
+	set_variable = { name = votc_has_mail_save value = 1 }
+}
+
+# Court Brain asks the game to empty its own log files. In debug mode every
+# console command makes the engine re-check the whole script and write it all
+# to debug.log (about 15 MB a minute); the bridge runs Log.ClearAll, the game's
+# own command, which empties the logs safely while they are open.
+votc_request_logs = {
+	set_variable = { name = votc_has_mail_logs value = 1 }
+}
+
+# =====================================================================
+# Watchdog - run by every poll that carries no new mail
+# =====================================================================
+#
+# A bridge command the console refused leaves its variable raised, and a
+# GUI state only fires when a variable goes UP. So a variable still raised
+# two polls later is lowered, and raised again on the next poll: the state
+# fires once more. (Each step reads only what earlier polls wrote.)
+
+votc_bridge_watchdog = {
+	if = { limit = { has_variable = votc_sig_arc_retry } remove_variable = votc_sig_arc_retry set_variable = { name = votc_sig_arc value = 1 } }
+	else_if = { limit = { has_variable = votc_sig_arc has_variable = votc_sig_arc_stuck } remove_variable = votc_sig_arc remove_variable = votc_sig_arc_stuck set_variable = { name = votc_sig_arc_retry value = 1 } }
+	else_if = { limit = { has_variable = votc_sig_arc } set_variable = { name = votc_sig_arc_stuck value = 1 } }
+	else = { remove_variable = votc_sig_arc_stuck }
+	if = { limit = { has_variable = votc_has_mail_loc_retry } remove_variable = votc_has_mail_loc_retry set_variable = { name = votc_has_mail_loc value = 1 } }
+	else_if = { limit = { has_variable = votc_has_mail_loc has_variable = votc_has_mail_loc_stuck } remove_variable = votc_has_mail_loc remove_variable = votc_has_mail_loc_stuck set_variable = { name = votc_has_mail_loc_retry value = 1 } }
+	else_if = { limit = { has_variable = votc_has_mail_loc } set_variable = { name = votc_has_mail_loc_stuck value = 1 } }
+	else = { remove_variable = votc_has_mail_loc_stuck }
+	if = { limit = { has_variable = votc_has_mail_save_retry } remove_variable = votc_has_mail_save_retry set_variable = { name = votc_has_mail_save value = 1 } }
+	else_if = { limit = { has_variable = votc_has_mail_save has_variable = votc_has_mail_save_stuck } remove_variable = votc_has_mail_save remove_variable = votc_has_mail_save_stuck set_variable = { name = votc_has_mail_save_retry value = 1 } }
+	else_if = { limit = { has_variable = votc_has_mail_save } set_variable = { name = votc_has_mail_save_stuck value = 1 } }
+	else = { remove_variable = votc_has_mail_save_stuck }
+	if = { limit = { has_variable = votc_has_mail_logs_retry } remove_variable = votc_has_mail_logs_retry set_variable = { name = votc_has_mail_logs value = 1 } }
+	else_if = { limit = { has_variable = votc_has_mail_logs has_variable = votc_has_mail_logs_stuck } remove_variable = votc_has_mail_logs remove_variable = votc_has_mail_logs_stuck set_variable = { name = votc_has_mail_logs_retry value = 1 } }
+	else_if = { limit = { has_variable = votc_has_mail_logs } set_variable = { name = votc_has_mail_logs_stuck value = 1 } }
+	else = { remove_variable = votc_has_mail_logs_stuck }
+	if = { limit = { has_variable = votc_sig_ack_retry } remove_variable = votc_sig_ack_retry set_variable = { name = votc_sig_ack value = 1 } }
+	else_if = { limit = { has_variable = votc_sig_ack has_variable = votc_sig_ack_stuck } remove_variable = votc_sig_ack remove_variable = votc_sig_ack_stuck set_variable = { name = votc_sig_ack_retry value = 1 } }
+	else_if = { limit = { has_variable = votc_sig_ack } set_variable = { name = votc_sig_ack_stuck value = 1 } }
+	else = { remove_variable = votc_sig_ack_stuck }
+	if = { limit = { has_variable = votc_sig_pulse_retry } remove_variable = votc_sig_pulse_retry set_variable = { name = votc_sig_pulse value = 1 } }
+	else_if = { limit = { has_variable = votc_sig_pulse has_variable = votc_sig_pulse_stuck } remove_variable = votc_sig_pulse remove_variable = votc_sig_pulse_stuck set_variable = { name = votc_sig_pulse_retry value = 1 } }
+	else_if = { limit = { has_variable = votc_sig_pulse } set_variable = { name = votc_sig_pulse_stuck value = 1 } }
+	else = { remove_variable = votc_sig_pulse_stuck }
+	if = { limit = { has_variable = votc_sig_talk_retry } remove_variable = votc_sig_talk_retry set_variable = { name = votc_sig_talk value = 1 } }
+	else_if = { limit = { has_variable = votc_sig_talk has_variable = votc_sig_talk_stuck } remove_variable = votc_sig_talk remove_variable = votc_sig_talk_stuck set_variable = { name = votc_sig_talk_retry value = 1 } }
+	else_if = { limit = { has_variable = votc_sig_talk } set_variable = { name = votc_sig_talk_stuck value = 1 } }
+	else = { remove_variable = votc_sig_talk_stuck }
+	if = { limit = { has_variable = votc_sig_envoy_retry } remove_variable = votc_sig_envoy_retry set_variable = { name = votc_sig_envoy value = 1 } }
+	else_if = { limit = { has_variable = votc_sig_envoy has_variable = votc_sig_envoy_stuck } remove_variable = votc_sig_envoy remove_variable = votc_sig_envoy_stuck set_variable = { name = votc_sig_envoy_retry value = 1 } }
+	else_if = { limit = { has_variable = votc_sig_envoy } set_variable = { name = votc_sig_envoy_stuck value = 1 } }
+	else = { remove_variable = votc_sig_envoy_stuck }
+	if = { limit = { has_variable = votc_sig_council_retry } remove_variable = votc_sig_council_retry set_variable = { name = votc_sig_council value = 1 } }
+	else_if = { limit = { has_variable = votc_sig_council has_variable = votc_sig_council_stuck } remove_variable = votc_sig_council remove_variable = votc_sig_council_stuck set_variable = { name = votc_sig_council_retry value = 1 } }
+	else_if = { limit = { has_variable = votc_sig_council } set_variable = { name = votc_sig_council_stuck value = 1 } }
+	else = { remove_variable = votc_sig_council_stuck }
+	if = { limit = { has_variable = votc_sig_progress_retry } remove_variable = votc_sig_progress_retry set_variable = { name = votc_sig_progress value = 1 } }
+	else_if = { limit = { has_variable = votc_sig_progress has_variable = votc_sig_progress_stuck } remove_variable = votc_sig_progress remove_variable = votc_sig_progress_stuck set_variable = { name = votc_sig_progress_retry value = 1 } }
+	else_if = { limit = { has_variable = votc_sig_progress } set_variable = { name = votc_sig_progress_stuck value = 1 } }
+	else = { remove_variable = votc_sig_progress_stuck }
+	if = { limit = { has_variable = votc_sig_reply_retry } remove_variable = votc_sig_reply_retry set_variable = { name = votc_sig_reply value = 1 } }
+	else_if = { limit = { has_variable = votc_sig_reply has_variable = votc_sig_reply_stuck } remove_variable = votc_sig_reply remove_variable = votc_sig_reply_stuck set_variable = { name = votc_sig_reply_retry value = 1 } }
+	else_if = { limit = { has_variable = votc_sig_reply } set_variable = { name = votc_sig_reply_stuck value = 1 } }
+	else = { remove_variable = votc_sig_reply_stuck }
+	if = { limit = { has_variable = votc_sig_hub_retry } remove_variable = votc_sig_hub_retry set_variable = { name = votc_sig_hub value = 1 } }
+	else_if = { limit = { has_variable = votc_sig_hub has_variable = votc_sig_hub_stuck } remove_variable = votc_sig_hub remove_variable = votc_sig_hub_stuck set_variable = { name = votc_sig_hub_retry value = 1 } }
+	else_if = { limit = { has_variable = votc_sig_hub } set_variable = { name = votc_sig_hub_stuck value = 1 } }
+	else = { remove_variable = votc_sig_hub_stuck }
+	if = { limit = { has_variable = votc_sig_decree_retry } remove_variable = votc_sig_decree_retry set_variable = { name = votc_sig_decree value = 1 } }
+	else_if = { limit = { has_variable = votc_sig_decree has_variable = votc_sig_decree_stuck } remove_variable = votc_sig_decree remove_variable = votc_sig_decree_stuck set_variable = { name = votc_sig_decree_retry value = 1 } }
+	else_if = { limit = { has_variable = votc_sig_decree } set_variable = { name = votc_sig_decree_stuck value = 1 } }
+	else = { remove_variable = votc_sig_decree_stuck }
+	if = { limit = { has_variable = votc_sig_advisor_retry } remove_variable = votc_sig_advisor_retry set_variable = { name = votc_sig_advisor value = 1 } }
+	else_if = { limit = { has_variable = votc_sig_advisor has_variable = votc_sig_advisor_stuck } remove_variable = votc_sig_advisor remove_variable = votc_sig_advisor_stuck set_variable = { name = votc_sig_advisor_retry value = 1 } }
+	else_if = { limit = { has_variable = votc_sig_advisor } set_variable = { name = votc_sig_advisor_stuck value = 1 } }
+	else = { remove_variable = votc_sig_advisor_stuck }
+}

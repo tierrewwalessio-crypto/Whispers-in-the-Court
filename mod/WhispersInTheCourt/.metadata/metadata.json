@@ -1,0 +1,17 @@
+{
+    "name": "Whispers in the Court",
+    "id": "votc_eu5_court_voices",
+    "version": "2.0.0",
+    "game_id": "eu5",
+    "supported_game_version": "1.3.11",
+    "short_description": "Talk with your court, summon the council, send envoys and travel the realm: an AI (the Player2 app) answers and the consequences reach the game. Requires Court Brain (WhispersInTheCourt.exe).",
+    "tags": [
+        "Gameplay",
+        "Events",
+        "User Interface"
+    ],
+    "relationships": [],
+    "game_custom_data": {
+        "multiplayer_synchronized": false
+    }
+}

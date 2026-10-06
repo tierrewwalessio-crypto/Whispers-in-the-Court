@@ -1,0 +1,16 @@
+﻿l_english:
+
+ STATIC_MODIFIER_NAME_votc_conversion_drive:0 "Missions of the Faith"
+ STATIC_MODIFIER_DESC_votc_conversion_drive:0 "Preachers, missions and the Crown's favour work on those who have not yet turned (Whispers in the Court)."
+ STATIC_MODIFIER_NAME_votc_assimilation_drive:0 "New Ways Taking Root"
+ STATIC_MODIFIER_DESC_votc_assimilation_drive:0 "Schools, offices and marriages carry the realm's ways to those who do not yet share them (Whispers in the Court)."
+ STATIC_MODIFIER_NAME_votc_conversion_unrest_mild:0 "Resentment of the New Ways"
+ STATIC_MODIFIER_DESC_votc_conversion_unrest_mild:0 "The people grumble at what is being pressed on them (Whispers in the Court)."
+ STATIC_MODIFIER_NAME_votc_conversion_unrest_severe:0 "Resistance to the New Ways"
+ STATIC_MODIFIER_DESC_votc_conversion_unrest_severe:0 "The people resist openly what is being pressed on them (Whispers in the Court)."
+ STATIC_MODIFIER_NAME_votc_new_faith_zeal:0 "Zeal of the New Faith"
+ STATIC_MODIFIER_DESC_votc_new_faith_zeal:0 "The Crown's new faith spreads through the realm on the favour of the court and the fervour of its clergy (Whispers in the Court)."
+ STATIC_MODIFIER_NAME_votc_faith_resistance_mild:0 "Keepers of the Old Faith"
+ STATIC_MODIFIER_DESC_votc_faith_resistance_mild:0 "Those who hold to the old faith meet in secret and resent the Crown (Whispers in the Court)."
+ STATIC_MODIFIER_NAME_votc_faith_resistance_severe:0 "Defenders of the Old Faith"
+ STATIC_MODIFIER_DESC_votc_faith_resistance_severe:0 "Those who hold to the old faith gather openly against the Crown (Whispers in the Court)."

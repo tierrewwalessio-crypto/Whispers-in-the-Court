@@ -1,0 +1,94 @@
+﻿# Voices of the Court - read-only values used to build the AI's context dump.
+#
+# Localisation can print any script value with
+#   [<scope>.MakeScope.ScriptValue('<name>')]
+# (see main_menu/localization/english/*: [ROOT.ScriptValue('prestige_mild_bonus')])
+# so every number the AI needs is exposed here instead of being hardcoded in
+# the middleware. Every property used below is one vanilla compares against in
+# common/ or events/ (gold, stability, num_locations, adm, ...).
+
+# ---------------------------------------------------------------- country side
+votc_c_gold              = { value = gold round = yes }
+votc_c_stability         = { value = stability round = yes }
+votc_c_prestige          = { value = prestige round = yes }
+votc_c_legitimacy        = { value = legitimacy round = yes }
+votc_c_gov_power         = { value = government_power round = yes }
+votc_c_manpower          = { value = manpower round = yes }
+votc_c_max_manpower      = { value = max_manpower round = yes }
+votc_c_army_size         = { value = army_size round = yes }
+votc_c_navy_size         = { value = navy_size round = yes }
+votc_c_population        = { value = total_population round = yes }
+votc_c_development       = { value = development round = yes }
+votc_c_locations         = { value = num_locations round = yes }
+# Used by the subjugation guard: a realm only bends the knee to a power
+# several times its size, and only after losing the war.
+votc_c_army_third        = { value = army_size multiply = 0.34 round = yes }
+votc_c_locations_half    = { value = num_locations multiply = 0.5 round = yes }
+votc_c_subjects          = { value = num_subjects round = yes }
+votc_c_loans             = { value = num_loans round = yes }
+votc_c_monthly_balance   = { value = monthly_balance round = yes }
+votc_c_tax_base          = { value = country_tax_base round = yes }
+votc_c_war_exhaustion    = { value = war_exhaustion round = yes }
+votc_c_inflation         = { value = inflation round = yes }
+votc_c_prosperity        = { value = prosperity round = yes }
+votc_c_rank              = { value = country_rank_level round = yes }
+votc_c_year              = { value = current_year }
+# Absolute month index, so "how many months since X" is one subtraction and
+# the influence budget can regenerate by elapsed game time instead of by how
+# often something happens to call the tick.
+votc_abs_month           = { value = current_year multiply = 12 add = current_month round = yes }
+votc_c_month             = { value = current_month }
+
+# Percentages are printed as 0-100 integers so the model never has to reason
+# about 0.37 vs 37.
+votc_c_religious_unity_pct = { value = religious_unity multiply = 100 min = 0 max = 100 round = yes }
+
+# Estate satisfaction, 0-100 per estate. estate_satisfaction is 0-1 in script.
+votc_c_sat_nobles   = { value = 0 if = { limit = { country_has_estate = estate_type:nobles_estate }   add = { value = estate_satisfaction:nobles_estate multiply = 100 } } round = yes }
+votc_c_sat_clergy   = { value = 0 if = { limit = { country_has_estate = estate_type:clergy_estate }   add = { value = estate_satisfaction:clergy_estate multiply = 100 } } round = yes }
+votc_c_sat_burghers = { value = 0 if = { limit = { country_has_estate = estate_type:burghers_estate } add = { value = estate_satisfaction:burghers_estate multiply = 100 } } round = yes }
+votc_c_sat_peasants = { value = 0 if = { limit = { country_has_estate = estate_type:peasants_estate } add = { value = estate_satisfaction:peasants_estate multiply = 100 } } round = yes }
+votc_c_sat_tribes   = { value = 0 if = { limit = { country_has_estate = estate_type:tribes_estate }   add = { value = estate_satisfaction:tribes_estate multiply = 100 } } round = yes }
+votc_c_sat_dhimmi   = { value = 0 if = { limit = { country_has_estate = estate_type:dhimmi_estate }   add = { value = estate_satisfaction:dhimmi_estate multiply = 100 } } round = yes }
+votc_c_sat_cossacks = { value = 0 if = { limit = { country_has_estate = estate_type:cossacks_estate } add = { value = estate_satisfaction:cossacks_estate multiply = 100 } } round = yes }
+
+# Counts that need a list walk.
+votc_c_num_allies   = { value = 0 every_known_country = { limit = { is_allied_with = { target = PREV } } add = 1 } }
+votc_c_num_rivals   = { value = 0 every_rival    = { add = 1 } }
+votc_c_num_wars     = { value = 0 every_current_war = { add = 1 } }
+votc_c_num_neighbours = { value = 0 every_neighbor_country = { add = 1 } }
+# every_character / every_general are GLOBAL lists in EU5 (vanilla always
+# filters them with owner = ...), so court size is reported through the
+# PERSON lines instead of a counter that would count the whole world.
+
+# Booleans as 0/1 so a single numeric printer covers everything.
+votc_c_at_war       = { value = 0 if = { limit = { at_war = yes } add = 1 } }
+votc_c_is_subject   = { value = 0 if = { limit = { is_subject = yes } add = 1 } }
+votc_c_has_regent  = { value = 0 if = { limit = { has_regent = yes } add = 1 } }
+votc_c_has_heir     = { value = 0 if = { limit = { has_heir = yes } add = 1 } }
+votc_c_has_parliament = { value = 0 if = { limit = { has_parliament = yes } add = 1 } }
+
+# The AI's spending allowance, so the model can see what it can still afford.
+votc_c_budget = { value = 0 if = { limit = { has_variable = votc_budget } add = var:votc_budget } round = yes }
+
+# ------------------------------------------------------------- character side
+votc_ch_adm      = { value = adm round = yes }
+votc_ch_dip      = { value = dip round = yes }
+votc_ch_mil      = { value = mil round = yes }
+votc_ch_age      = { value = age_in_years round = yes }
+votc_ch_total    = { value = total_abilities round = yes }
+votc_ch_is_ruler = { value = 0 if = { limit = { is_ruler = yes } add = 1 } }
+votc_ch_is_heir  = { value = 0 if = { limit = { is_heir = yes } add = 1 } }
+votc_ch_in_cabinet = { value = 0 if = { limit = { in_cabinet = yes } add = 1 } }
+votc_ch_is_general = { value = 0 if = { limit = { is_general = yes } add = 1 } }
+votc_ch_is_female  = { value = 0 if = { limit = { is_female = yes } add = 1 } }
+
+# --------------------------------------------------- protocol scratch values
+# The request/ack lines in main_menu/localization/english/votc_protocol_l_english.yml
+# print these. They just mirror country variables set right before the log call,
+# guarded so an unset variable prints 0 instead of erroring.
+votc_v_seq   = { value = 0 if = { limit = { has_variable = votc_seq }  add = var:votc_seq } round = yes }
+votc_v_turn  = { value = 0 if = { limit = { has_variable = votc_turn } add = var:votc_turn } round = yes }
+votc_v_a1    = { value = 0 if = { limit = { has_variable = votc_a1 }   add = var:votc_a1 } round = yes }
+votc_v_a2    = { value = 0 if = { limit = { has_variable = votc_a2 }   add = var:votc_a2 } round = yes }
+votc_v_a3    = { value = 0 if = { limit = { has_variable = votc_a3 }   add = var:votc_a3 } round = yes }

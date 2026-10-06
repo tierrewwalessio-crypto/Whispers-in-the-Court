@@ -1,0 +1,8 @@
+# EU5 reads the mod's files byte for byte (UTF-8 with BOM, as written).
+# Git must never convert their line endings.
+* -text
+
+*.png binary
+*.dds binary
+*.ico binary
+*.exe binary

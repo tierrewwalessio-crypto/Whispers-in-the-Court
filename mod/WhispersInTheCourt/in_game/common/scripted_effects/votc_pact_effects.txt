@@ -1,0 +1,173 @@
+﻿# Whispers in the Court - PACTS: what another court does about a promise.
+#
+# Court Brain watches the promises made at court (courtbrain/memory.py,
+# pacts). When one comes due - the ruler went to war on the enemy an ally
+# swore to fight, or the ruler broke their word to a foreign court - the AI
+# decides, as that court would, what it does, and the story event that tells
+# it carries the deed in every one of its options: it happens whatever the
+# ruler answers, because it is the other court's decision, not the ruler's.
+#
+# The two countries are bound when the mail is written (votc_pact_bind):
+# the partner (the court that made the promise) and the enemy (the common
+# foe, for a war joined together). Variables are read into saved scopes
+# first: inside a war's scope, var: would look at the war's own variables.
+
+votc_pact_bind = {
+	set_variable = { name = votc_pact_partner value = $partner$ }
+	set_variable = { name = votc_pact_enemy value = $enemy$ }
+}
+
+# The partner joins the ruler's war against the common enemy, on the ruler's side.
+votc_pact_join_war = {
+	save_scope_as = votc_me
+	if = { limit = { exists = var:votc_pact_partner } var:votc_pact_partner = { save_scope_as = votc_pact_ally } }
+	if = { limit = { exists = var:votc_pact_enemy } var:votc_pact_enemy = { save_scope_as = votc_pact_foe } }
+	if = {
+		limit = {
+			exists = scope:votc_pact_ally
+			exists = scope:votc_pact_foe
+			scope:votc_pact_ally = { NOT = { is_at_war_with = scope:votc_me } }
+			is_at_war_with = scope:votc_pact_foe
+		}
+		random_current_war = {
+			limit = {
+				OR = {
+					attacker_leader = scope:votc_pact_foe
+					defender_leader = scope:votc_pact_foe
+				}
+			}
+			save_scope_as = votc_pact_war
+		}
+	}
+	if = {
+		limit = { exists = scope:votc_pact_war }
+		if = {
+			limit = { scope:votc_pact_war = { defender_leader = scope:votc_pact_foe } }
+			scope:votc_pact_ally = { join_war_as_attacker = { war = scope:votc_pact_war } }
+		}
+		else = {
+			scope:votc_pact_ally = { join_war_as_defender = { war = scope:votc_pact_war } }
+		}
+	}
+}
+
+# A betrayed court goes to war with the ruler.
+votc_pact_declare_war = {
+	save_scope_as = votc_me
+	if = { limit = { exists = var:votc_pact_partner } var:votc_pact_partner = { save_scope_as = votc_pact_ally } }
+	if = {
+		limit = {
+			exists = scope:votc_pact_ally
+			scope:votc_pact_ally = {
+				NOT = { is_at_war_with = scope:votc_me }
+				NOT = { has_truce_with = scope:votc_me }
+			}
+		}
+		if = {
+			limit = { is_allied_with = { target = scope:votc_pact_ally } }
+			remove_relation = { first = this second = scope:votc_pact_ally type = relation_type:alliance }
+		}
+		scope:votc_pact_ally = { declare_war_with_cb = { target = scope:votc_me type = casus_belli:cb_insulted_us } }
+	}
+}
+
+# A betrayed or disappointed court breaks its alliance with the ruler.
+votc_pact_break_alliance = {
+	save_scope_as = votc_me
+	if = { limit = { exists = var:votc_pact_partner } var:votc_pact_partner = { save_scope_as = votc_pact_ally } }
+	if = {
+		limit = {
+			exists = scope:votc_pact_ally
+			is_allied_with = { target = scope:votc_pact_ally }
+		}
+		remove_relation = { first = this second = scope:votc_pact_ally type = relation_type:alliance }
+		scope:votc_pact_ally = { add_opinion = { target = scope:votc_me modifier = votc_opinion_broken_promise } }
+	}
+}
+
+# A court that kept its word, or saw the ruler keep theirs, thinks better of the ruler.
+votc_pact_goodwill = {
+	save_scope_as = votc_me
+	if = { limit = { exists = var:votc_pact_partner } var:votc_pact_partner = { save_scope_as = votc_pact_ally } }
+	if = {
+		limit = { exists = scope:votc_pact_ally }
+		scope:votc_pact_ally = { add_opinion = { target = scope:votc_me modifier = votc_opinion_royal_promise } }
+		add_trust = { target = scope:votc_pact_ally value = 10 }
+	}
+}
+
+# The partner makes an alliance with the ruler.
+votc_pact_alliance = {
+	save_scope_as = votc_me
+	if = { limit = { exists = var:votc_pact_partner } var:votc_pact_partner = { save_scope_as = votc_pact_ally } }
+	if = {
+		limit = {
+			exists = scope:votc_pact_ally
+			NOT = { is_at_war_with = scope:votc_pact_ally }
+			NOT = { is_allied_with = { target = scope:votc_pact_ally } }
+		}
+		create_relation = { first = this second = scope:votc_pact_ally type = relation_type:alliance }
+	}
+}
+
+# The partner ends its war with the ruler, with a truce (the terms of a peace agreed at court).
+votc_pact_make_peace = {
+	save_scope_as = votc_me
+	if = { limit = { exists = var:votc_pact_partner } var:votc_pact_partner = { save_scope_as = votc_pact_ally } }
+	if = {
+		limit = { exists = scope:votc_pact_ally is_at_war_with = scope:votc_pact_ally }
+		leave_all_wars_with = scope:votc_pact_ally
+		add_truce_with = { target = scope:votc_pact_ally mutual = yes years = 5 }
+	}
+}
+
+# The partner's betrayal (of a partition, a treaty, a promise) gives the ruler a just cause against it.
+votc_pact_casus_belli = {
+	save_scope_as = votc_me
+	if = { limit = { exists = var:votc_pact_partner } var:votc_pact_partner = { save_scope_as = votc_pact_ally } }
+	if = {
+		limit = { exists = scope:votc_pact_ally }
+		add_casus_belli = { target = scope:votc_pact_ally type = casus_belli:cb_insulted_us }
+	}
+}
+
+# The partner pays what it promised (a tribute, a subsidy, the price of a treaty).
+votc_pact_pays = {
+	add_gold = votc_gold_mild
+}
+
+# The ruler keeps their side: they join the partner's war against the partner's enemy.
+votc_pact_ruler_join_war = {
+	save_scope_as = votc_me
+	if = { limit = { exists = var:votc_pact_partner } var:votc_pact_partner = { save_scope_as = votc_pact_ally } }
+	if = { limit = { exists = var:votc_pact_enemy } var:votc_pact_enemy = { save_scope_as = votc_pact_foe } }
+	if = {
+		limit = {
+			exists = scope:votc_pact_ally
+			exists = scope:votc_pact_foe
+			NOT = { is_at_war_with = scope:votc_pact_ally }
+			scope:votc_pact_ally = { is_at_war_with = scope:votc_pact_foe }
+		}
+		scope:votc_pact_ally = {
+			random_current_war = {
+				limit = {
+					OR = {
+						attacker_leader = scope:votc_pact_foe
+						defender_leader = scope:votc_pact_foe
+					}
+				}
+				save_scope_as = votc_pact_war
+			}
+		}
+	}
+	if = {
+		limit = { exists = scope:votc_pact_war }
+		if = {
+			limit = { scope:votc_pact_war = { defender_leader = scope:votc_pact_foe } }
+			join_war_as_attacker = { war = scope:votc_pact_war }
+		}
+		else = {
+			join_war_as_defender = { war = scope:votc_pact_war }
+		}
+	}
+}

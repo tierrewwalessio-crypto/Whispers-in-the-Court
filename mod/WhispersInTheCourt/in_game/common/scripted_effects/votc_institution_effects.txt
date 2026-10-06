@@ -1,0 +1,123 @@
+﻿# Whispers in the Court - CHANGES TO THE STATE ITSELF: its name, its form of
+# government, its rank. Always a decision of the ruler (a button the player
+# presses, or a decree they proclaim), applied with the event's confirmation.
+#
+# Names come from a pool of localisation keys, votc_cname_1 ... votc_cname_100
+# (and _ADJ), written by Court Brain into votc_names_l_english.yml before the
+# change is sent - the game can only show a name that is a localisation key.
+
+# n = the key number in the pool
+votc_order_rename = {
+	change_country_name = votc_cname_$n$
+	change_country_adjective = votc_cname_$n$_ADJ
+}
+
+# type = monarchy | republic | theocracy | tribe | steppe_horde
+#
+# Done exactly as the game's own conversions do it
+# (common/generic_actions/government_conversions.txt): the engine's
+# change_government_type (reforms, succession and mechanics really change),
+# the game's price for it (price:change_government_type_price = 50 stability,
+# 25 legitimacy), the estate that gains from it made very content, the ruler
+# and close family entering the crown estate when a monarchy is founded, and
+# the same 20-year cooldown the game uses, so it cannot be repeated at will.
+# Refused, as by the game, during a personal union or a bankruptcy.
+votc_order_government = {
+	if = {
+		limit = { government_type = government_type:$type$ }
+		set_variable = { name = votc_order_fail_what value = 11 }
+		set_variable = { name = votc_order_fail value = 13 }
+		trigger_event_non_silently = { id = votc.910 days = 1 }
+	}
+	else_if = {
+		limit = { exists = union }
+		set_variable = { name = votc_order_fail_what value = 11 }
+		set_variable = { name = votc_order_fail value = 15 }
+		trigger_event_non_silently = { id = votc.910 days = 1 }
+	}
+	else_if = {
+		limit = { is_during_bankruptcy = yes }
+		set_variable = { name = votc_order_fail_what value = 11 }
+		set_variable = { name = votc_order_fail value = 16 }
+		trigger_event_non_silently = { id = votc.910 days = 1 }
+	}
+	else = {
+		add_stability = -50
+		add_legitimacy = -25
+		change_government_type = government_type:$type$
+		votc_government_aftermath_$type$ = yes
+		add_cooldown = { type = transition_government years = 20 }
+	}
+}
+
+votc_government_aftermath_monarchy = {
+	if = {
+		limit = { country_has_estate = estate_type:nobles_estate }
+		add_estate_satisfaction = { type = estate_type:nobles_estate value = estate_satisfaction_extreme_bonus }
+	}
+	ruler_or_regent ?= {
+		change_character_estate = estate_type:crown_estate
+		every_close_relative = {
+			limit = {
+				owner = root
+				is_alive = yes
+				NOT = { has_estate = estate_type:crown_estate }
+			}
+			change_character_estate = estate_type:crown_estate
+		}
+	}
+}
+votc_government_aftermath_republic = {
+	if = {
+		limit = { country_has_estate = estate_type:burghers_estate }
+		add_estate_satisfaction = { type = estate_type:burghers_estate value = estate_satisfaction_extreme_bonus }
+	}
+}
+votc_government_aftermath_theocracy = {
+	if = {
+		limit = { country_has_estate = estate_type:clergy_estate }
+		add_estate_satisfaction = { type = estate_type:clergy_estate value = estate_satisfaction_extreme_bonus }
+	}
+}
+votc_government_aftermath_tribe = {
+	if = {
+		limit = { country_has_estate = estate_type:nobles_estate }
+		add_estate_satisfaction = { type = estate_type:nobles_estate value = estate_satisfaction_severe_bonus }
+	}
+}
+votc_government_aftermath_steppe_horde = {
+	if = {
+		limit = { country_has_estate = estate_type:nobles_estate }
+		add_estate_satisfaction = { type = estate_type:nobles_estate value = estate_satisfaction_severe_bonus }
+	}
+}
+
+# rank = rank_county | rank_duchy | rank_kingdom | rank_empire
+# The game's own rules for a rank apply (can_upgrade_country_rank, as in
+# common/country_ranks); a new crown costs a show of majesty.
+votc_order_rank = {
+	if = {
+		limit = { country_rank = country_rank:$rank$ }
+		set_variable = { name = votc_order_fail_what value = 12 }
+		set_variable = { name = votc_order_fail value = 14 }
+		trigger_event_non_silently = { id = votc.910 days = 1 }
+	}
+	else_if = {
+		# Stepping down (a kingdom becoming a duchy) has no conditions; it costs
+		# the standing that came with the higher crown.
+		limit = { votc_rank_below_current_$rank$ = yes }
+		set_country_rank = country_rank:$rank$
+		add_prestige = prestige_mild_penalty
+	}
+	else_if = {
+		limit = { can_upgrade_country_rank = { rank = $rank$ } }
+		set_country_rank = country_rank:$rank$
+		add_prestige = prestige_mild_bonus
+		add_government_power = government_power_mild_penalty
+	}
+	else = {
+		set_variable = { name = votc_order_fail_what value = 12 }
+		set_variable = { name = votc_order_fail value = 12 }
+		trigger_event_non_silently = { id = votc.910 days = 1 }
+	}
+}

@@ -1,0 +1,185 @@
+﻿# Voices of the Court - the buttons on your own country.
+#
+# generic_actions are, in the words of vanilla's own readme, "an action
+# entirely in script and place a GUI button for it entirely in script - no
+# need for coders". That is the whole reason this mod ships no .gui files.
+#
+# scope:actor = the player's country
+
+# =====================================================================
+# Switching the mod on and off in a running campaign
+# =====================================================================
+
+votc_open_court = {
+	type = owncountry
+	ai_tick = never
+
+	potential = {
+		scope:actor = {
+			is_human = yes
+			NOT = { has_variable = votc_enabled }
+		}
+	}
+
+	allow = { }
+
+	effect = {
+		scope:actor = { votc_enable = yes }
+	}
+}
+
+votc_close_court = {
+	type = owncountry
+	ai_tick = never
+
+	potential = {
+		scope:actor = {
+			is_human = yes
+			has_variable = votc_enabled
+		}
+	}
+
+	allow = { }
+
+	effect = {
+		scope:actor = { votc_disable = yes }
+	}
+}
+
+# Re-sends the whole picture. Useful after loading a save, or when the
+# middleware was started after the game.
+votc_resync = {
+	type = owncountry
+	ai_tick = never
+
+	potential = {
+		scope:actor = {
+			is_human = yes
+			has_variable = votc_enabled
+		}
+	}
+
+	allow = { }
+
+	effect = {
+		scope:actor = { votc_handshake = yes }
+	}
+}
+
+# =====================================================================
+# The Crown Council
+# =====================================================================
+
+# A general session. The agenda is not chosen by the player: the council
+# reads the state of the realm and brings up what it thinks matters, which
+# is the point of having one.
+votc_summon_council = {
+	type = owncountry
+	ai_tick = never
+
+	potential = {
+		scope:actor = {
+			is_human = yes
+			has_variable = votc_enabled
+		}
+	}
+
+	allow = {
+		scope:actor = { has_ruler = yes }
+	}
+
+	cooldown = {
+		type = votc_council
+		months = 6
+	}
+
+	effect = {
+		scope:actor = { votc_begin_council = { agenda = 0 } }
+	}
+}
+
+# Hear one estate in particular. The estate the player picks becomes the
+# agenda, and the middleware is told which one it was.
+votc_hear_estate = {
+	type = owncountry
+	ai_tick = never
+
+	potential = {
+		scope:actor = {
+			is_human = yes
+			has_variable = votc_enabled
+		}
+	}
+
+	allow = {
+		scope:actor = { has_ruler = yes }
+	}
+
+	select_trigger = {
+		looking_for_a = estate
+		source = actor
+		target_flag = target
+		name = "votc_choose_estate"
+		column = { data = name }
+	}
+
+	cooldown = {
+		type = votc_council
+		months = 3
+	}
+
+	effect = {
+		scope:actor = { votc_begin_estate_council = yes }
+	}
+}
+
+# =====================================================================
+# The royal progress
+# =====================================================================
+
+# The ruler leaves the capital and shows themselves to a place. What happens
+# there depends on the place: its culture, its religion, its control, how
+# rich or how wretched it is - all of which the middleware receives in the
+# LOCATION context line before it writes a word.
+votc_royal_progress = {
+	type = owncountry
+	ai_tick = never
+
+	potential = {
+		scope:actor = {
+			is_human = yes
+			has_variable = votc_enabled
+		}
+	}
+
+	allow = {
+		scope:actor = {
+			has_ruler = yes
+			at_war = no
+		}
+	}
+
+	select_trigger = {
+		looking_for_a = location
+		source = actor
+		target_flag = target
+		source_flags = only_actual_locations
+		name = "votc_choose_destination"
+		column = { data = name }
+		visible = {
+			owner ?= scope:actor
+		}
+	}
+
+	# A progress is a year out of a reign, not a weekend trip.
+	cooldown = {
+		type = votc_progress
+		months = 12
+	}
+
+	effect = {
+		scope:actor = {
+			votc_begin_progress = { where = scope:target mode = 0 }
+		}
+	}
+}

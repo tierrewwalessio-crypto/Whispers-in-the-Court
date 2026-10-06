@@ -1,0 +1,33 @@
+{
+  "user_dir": "",
+  "game_dir": "",
+  "mod_dir": "",
+
+  "player2_host": "127.0.0.1",
+  "player2_port": 0,
+  "player2_game_key": "voices-of-the-court-eu5",
+  "model_temperature": 0.85,
+  "max_tokens": 3000,
+  "request_timeout_s": 120.0,
+
+  "tts_enabled": false,
+  "tts_voice_id": "",
+
+  "language": "it",
+  "game_language": "english",
+
+  "console_key": "OEM_3",
+  "reload_loc_command": "",
+  "run_file_name": "votc_in.txt",
+
+  "pulse_interval_s": 20.0,
+  "event_frequency": "normal",
+  "chronicle_min_days": 25,
+  "knock_min_days": 60,
+  "chronicle_chance": 0.55,
+  "knock_chance": 0.3,
+
+  "max_actions_per_scene": 3,
+  "dry_run": false,
+  "overlay": true
+}

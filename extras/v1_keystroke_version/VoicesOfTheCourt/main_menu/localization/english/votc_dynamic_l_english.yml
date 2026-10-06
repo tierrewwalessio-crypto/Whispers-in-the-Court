@@ -1,0 +1,66 @@
+﻿l_english:
+
+ # ===================================================================
+ # Voices of the Court - DYNAMIC TEXT
+ #
+ # THIS FILE IS REWRITTEN BY COURT BRAIN AT RUNTIME. Do not put anything
+ # here you want to keep - it is overwritten before every scene and then
+ # hot-reloaded with the console `reload localization` command.
+ #
+ # The values below are the fallbacks the player sees if the middleware
+ # is not running, or dies between writing and firing. They should always
+ # read as something a court could plausibly say, never as an error.
+ # ===================================================================
+
+ # --- a conversation ---------------------------------------------------
+ votc_dlg_title:0 "An Audience"
+ votc_dlg_body:0 "Your guest waits in silence, and the moment passes without a word being said. (Court Brain is not answering: check that the middleware and the Player2 app are running.)"
+ votc_dlg_o1:0 "..."
+ votc_dlg_o2:0 "..."
+ votc_dlg_o3:0 "..."
+ votc_dlg_o4:0 "..."
+ votc_dlg_leave:0 "End the audience."
+
+ # --- the Crown Council -------------------------------------------------
+ votc_cnc_title:0 "The Crown Council"
+ votc_cnc_body:0 "The council assembles, but no one has prepared anything to say. (Court Brain is not answering.)"
+ votc_cnc_o1:0 "..."
+ votc_cnc_o2:0 "..."
+ votc_cnc_o3:0 "..."
+ votc_cnc_o4:0 "..."
+ votc_cnc_adjourn:0 "Adjourn the council."
+
+ # --- a chronicle --------------------------------------------------------
+ votc_chr_title:0 "From the Chronicle"
+ votc_chr_body:0 "The chronicler's page is blank this month."
+ votc_chr_read:0 "So it is written."
+
+ # --- someone asks to be seen ---------------------------------------------
+ votc_knk_title:0 "A Petitioner"
+ votc_knk_body:0 "Someone is waiting outside your chamber, though no one can say who sent them."
+ votc_knk_o1:0 "..."
+ votc_knk_o2:0 "..."
+ votc_knk_o3:0 "..."
+ votc_knk_refuse:0 "Send them away."
+
+ # --- the royal progress ---------------------------------------------------
+ votc_prg_title:0 "On the Road"
+ votc_prg_body:0 "The column halts. Nothing of note happens here."
+ votc_prg_o1:0 "..."
+ votc_prg_o2:0 "..."
+ votc_prg_o3:0 "..."
+ votc_prg_o4:0 "..."
+ votc_prg_ride_on:0 "Ride on."
+
+ # --- an envoy reports -----------------------------------------------------
+ votc_env_title:0 "The Envoy Returns"
+ votc_env_body:0 "Your envoy returns with nothing but road dust."
+ votc_env_o1:0 "..."
+ votc_env_o2:0 "..."
+ votc_env_o3:0 "..."
+ votc_env_recall:0 "Dismiss the envoy."
+
+ # --- the middleware speaking for itself -------------------------------------
+ votc_ntc_title:0 "Voices of the Court"
+ votc_ntc_body:0 "Court Brain could not complete the request."
+ votc_ntc_ok:0 "Very well."

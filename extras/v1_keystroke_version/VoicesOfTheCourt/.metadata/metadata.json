@@ -1,0 +1,17 @@
+{
+    "name": "Voices of the Court",
+    "id": "voices_of_the_court",
+    "version": "1.0.0",
+    "game_id": "eu5",
+    "supported_game_version": "1.3.11",
+    "short_description": "Parla con la tua corte, riunisci il consiglio, viaggia per il regno e lascia che l'IA narri il tuo regno. Richiede il middleware Court Brain + app Player2.",
+    "tags": [
+        "Gameplay",
+        "Events",
+        "Utilities"
+    ],
+    "relationships": [],
+    "game_custom_data": {
+        "multiplayer_synchronized": false
+    }
+}

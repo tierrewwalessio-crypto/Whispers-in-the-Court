@@ -1,0 +1,101 @@
+﻿# Whispers in the Court - the buttons on your own country.
+#
+# generic_actions are, in the words of vanilla's own readme, "an action
+# entirely in script and place a GUI button for it entirely in script - no
+# need for coders". Each one only raises a signal: Court Brain's side panel
+# slides open and the scene is played there.
+#
+# scope:actor = the player's country
+
+votc_summon_council = {
+	type = owncountry
+	ai_tick = never
+	show_message = no
+
+	potential = {
+		scope:actor = { is_human = yes }
+	}
+
+	allow = {
+		scope:actor = { has_ruler = yes }
+	}
+
+	effect = {
+		scope:actor = { votc_signal_council = { agenda = 0 } }
+	}
+}
+
+votc_hear_estate = {
+	type = owncountry
+	ai_tick = never
+	show_message = no
+
+	potential = {
+		scope:actor = { is_human = yes }
+	}
+
+	allow = {
+		scope:actor = { has_ruler = yes }
+	}
+
+	select_trigger = {
+		looking_for_a = estate
+		source = actor
+		target_flag = target
+		name = "votc_choose_estate"
+		column = { data = name }
+	}
+
+	effect = {
+		scope:actor = { votc_signal_estate = yes }
+	}
+}
+
+votc_royal_progress = {
+	type = owncountry
+	ai_tick = never
+	show_message = no
+
+	potential = {
+		scope:actor = { is_human = yes }
+	}
+
+	allow = {
+		scope:actor = { has_ruler = yes }
+	}
+
+	select_trigger = {
+		looking_for_a = location
+		source = actor
+		target_flag = target
+		source_flags = only_actual_locations
+		name = "votc_choose_destination"
+		column = { data = name }
+		visible = {
+			owner ?= scope:actor
+		}
+	}
+
+	effect = {
+		scope:actor = { votc_signal_progress = { where = scope:target } }
+	}
+}
+
+# The ruler acts first and tells the realm afterwards.
+votc_issue_decree = {
+	type = owncountry
+	ai_tick = never
+	show_message = no
+
+	potential = {
+		scope:actor = { is_human = yes }
+	}
+
+	allow = {
+		scope:actor = { has_ruler = yes }
+	}
+
+	effect = {
+		scope:actor = { votc_signal_decree = yes }
+	}
+}

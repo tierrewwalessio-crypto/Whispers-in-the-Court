@@ -1,0 +1,21 @@
+﻿# Voices of the Court - the OUT channel (game -> Court Brain).
+#
+# Everything the game tells the middleware goes through here. `debug_log`
+# resolves a localisation key with ROOT/SCOPE/PREV available and writes the
+# result to the log, so the whole protocol lives in
+# main_menu/localization/english/votc_context_l_english.yml and
+# main_menu/localization/english/votc_protocol_l_english.yml.
+#
+# Court Brain tails logs/error.log, logs/game.log and logs/debug.log at the
+# same time, so it does not matter which sink the engine picks.
+
+votc_log = {
+	debug_log = "$key$"
+}
+
+# Bump the sequence counter and log. Every outgoing line carries the counter
+# so the middleware can drop replays after a log rotation.
+votc_log_seq = {
+	change_variable = { name = votc_seq add = 1 }
+	debug_log = "$key$"
+}

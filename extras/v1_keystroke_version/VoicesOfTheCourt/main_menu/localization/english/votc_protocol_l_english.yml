@@ -1,0 +1,69 @@
+﻿l_english:
+
+ # ===================================================================
+ # Voices of the Court - PROTOCOL LINES
+ #
+ # One key per message the game sends to Court Brain. Never shown to the
+ # player. Keeping one key per message type (instead of encoding the type
+ # as a number) means logs/error.log stays readable by a human when
+ # something goes wrong.
+ #
+ # Shared tail: seq is a monotonic counter so the middleware can drop
+ # duplicates when the log file rotates.
+ # ===================================================================
+
+ # --- requests the player triggered -------------------------------------
+ votc_req_talk_open:0       "VOTC1|REQ|talk_open|seq=[ROOT.ScriptValue('votc_v_seq')|0]|turn=[ROOT.ScriptValue('votc_v_turn')|0]|topic=[ROOT.ScriptValue('votc_v_a1')|0]"
+ votc_req_talk_reply:0      "VOTC1|REQ|talk_reply|seq=[ROOT.ScriptValue('votc_v_seq')|0]|turn=[ROOT.ScriptValue('votc_v_turn')|0]|choice=[ROOT.ScriptValue('votc_v_a1')|0]"
+ votc_req_talk_end:0        "VOTC1|REQ|talk_end|seq=[ROOT.ScriptValue('votc_v_seq')|0]|turn=[ROOT.ScriptValue('votc_v_turn')|0]"
+ votc_req_council_open:0    "VOTC1|REQ|council_open|seq=[ROOT.ScriptValue('votc_v_seq')|0]|agenda=[ROOT.ScriptValue('votc_v_a1')|0]"
+ votc_req_council_choice:0  "VOTC1|REQ|council_choice|seq=[ROOT.ScriptValue('votc_v_seq')|0]|choice=[ROOT.ScriptValue('votc_v_a1')|0]"
+ votc_req_progress_open:0   "VOTC1|REQ|progress_open|seq=[ROOT.ScriptValue('votc_v_seq')|0]|mode=[ROOT.ScriptValue('votc_v_a1')|0]"
+ votc_req_progress_choice:0 "VOTC1|REQ|progress_choice|seq=[ROOT.ScriptValue('votc_v_seq')|0]|choice=[ROOT.ScriptValue('votc_v_a1')|0]"
+ votc_req_knock_reply:0     "VOTC1|REQ|knock_reply|seq=[ROOT.ScriptValue('votc_v_seq')|0]|choice=[ROOT.ScriptValue('votc_v_a1')|0]"
+ votc_req_envoy_open:0      "VOTC1|REQ|envoy_open|seq=[ROOT.ScriptValue('votc_v_seq')|0]|errand=[ROOT.ScriptValue('votc_v_a1')|0]"
+
+ # --- heartbeat ----------------------------------------------------------
+ votc_req_sync:0            "VOTC1|SYNC|seq=[ROOT.ScriptValue('votc_v_seq')|0]"
+ votc_req_tick:0            "VOTC1|TICK|seq=[ROOT.ScriptValue('votc_v_seq')|0]|budget=[ROOT.ScriptValue('votc_c_budget')|0]"
+
+ # --- acknowledgements sent back after the game applied something --------
+ votc_ack_applied:0         "VOTC1|ACK|applied|seq=[ROOT.ScriptValue('votc_v_seq')|0]|spent=[ROOT.ScriptValue('votc_v_a1')|0]|budget=[ROOT.ScriptValue('votc_c_budget')|0]"
+ votc_ack_refused_budget:0  "VOTC1|ACK|refused_budget|seq=[ROOT.ScriptValue('votc_v_seq')|0]|budget=[ROOT.ScriptValue('votc_c_budget')|0]"
+ votc_ack_refused_invalid:0 "VOTC1|ACK|refused_invalid|seq=[ROOT.ScriptValue('votc_v_seq')|0]"
+ votc_ack_refused_cap:0     "VOTC1|ACK|refused_action_cap|seq=[ROOT.ScriptValue('votc_v_seq')|0]|applied=[ROOT.ScriptValue('votc_v_a1')|0]"
+
+ # --- things that happened in the world ----------------------------------
+ # scope:votc_evt_country / scope:votc_evt_char / scope:votc_evt_location are
+ # saved by the on_action hook before the line is logged, when relevant.
+ votc_evt_new_ruler:0       "VOTC1|EVT|new_ruler|[GetDateString]|[ROOT.GetCountry.GetTag]|[SCOPE.sCharacter('votc_evt_char').GetNameWithNoTooltip]"
+ votc_evt_ruler_death:0     "VOTC1|EVT|ruler_death|[GetDateString]|[ROOT.GetCountry.GetTag]|[SCOPE.sCharacter('votc_evt_char').GetNameWithNoTooltip]"
+ votc_evt_war_declared:0    "VOTC1|EVT|war_declared|[GetDateString]|[ROOT.GetCountry.GetTag]|[SCOPE.sCountry('votc_evt_country').GetTag]|[SCOPE.sCountry('votc_evt_country').GetNameWithNoTooltip]"
+ votc_evt_war_ended:0       "VOTC1|EVT|war_ended|[GetDateString]|[ROOT.GetCountry.GetTag]"
+ votc_evt_battle_won:0      "VOTC1|EVT|battle_won|[GetDateString]|[ROOT.GetCountry.GetTag]"
+ votc_evt_battle_lost:0     "VOTC1|EVT|battle_lost|[GetDateString]|[ROOT.GetCountry.GetTag]"
+ votc_evt_siege_won:0       "VOTC1|EVT|siege_won|[GetDateString]|[ROOT.GetCountry.GetTag]|[SCOPE.sLocation('votc_evt_location').GetNameWithNoTooltip]"
+ votc_evt_law_passed:0      "VOTC1|EVT|law_passed|[GetDateString]|[ROOT.GetCountry.GetTag]"
+ votc_evt_parliament_passed:0 "VOTC1|EVT|parliament_passed|[GetDateString]|[ROOT.GetCountry.GetTag]"
+ votc_evt_parliament_failed:0 "VOTC1|EVT|parliament_failed|[GetDateString]|[ROOT.GetCountry.GetTag]"
+ votc_evt_policy_changed:0  "VOTC1|EVT|policy_changed|[GetDateString]|[ROOT.GetCountry.GetTag]"
+ votc_evt_reform_change:0   "VOTC1|EVT|reform_change|[GetDateString]|[ROOT.GetCountry.GetTag]"
+ votc_evt_cabinet_assigned:0 "VOTC1|EVT|cabinet_assigned|[GetDateString]|[ROOT.GetCountry.GetTag]|[SCOPE.sCharacter('votc_evt_char').GetNameWithNoTooltip]"
+ votc_evt_cabinet_removed:0 "VOTC1|EVT|cabinet_removed|[GetDateString]|[ROOT.GetCountry.GetTag]|[SCOPE.sCharacter('votc_evt_char').GetNameWithNoTooltip]"
+ votc_evt_institution:0     "VOTC1|EVT|institution_embraced|[GetDateString]|[ROOT.GetCountry.GetTag]"
+ votc_evt_bankruptcy:0      "VOTC1|EVT|bankruptcy|[GetDateString]|[ROOT.GetCountry.GetTag]"
+ votc_evt_loan_taken:0      "VOTC1|EVT|loan_taken|[GetDateString]|[ROOT.GetCountry.GetTag]"
+ votc_evt_religion_changed:0 "VOTC1|EVT|religion_changed|[GetDateString]|[ROOT.GetCountry.GetTag]|[ROOT.GetCountry.GetReligion.GetName]"
+ votc_evt_estate_change:0   "VOTC1|EVT|estate_change|[GetDateString]|[ROOT.GetCountry.GetTag]|[SCOPE.sCharacter('votc_evt_char').GetNameWithNoTooltip]"
+ votc_evt_marriage:0        "VOTC1|EVT|royal_marriage|[GetDateString]|[ROOT.GetCountry.GetTag]|[SCOPE.sCountry('votc_evt_country').GetTag]"
+ votc_evt_rank_change:0     "VOTC1|EVT|rank_change|[GetDateString]|[ROOT.GetCountry.GetTag]|rank=[ROOT.ScriptValue('votc_c_rank')|0]"
+ votc_evt_location_lost:0   "VOTC1|EVT|location_lost|[GetDateString]|[ROOT.GetCountry.GetTag]|[SCOPE.sLocation('votc_evt_location').GetNameWithNoTooltip]"
+ votc_evt_annexed_other:0   "VOTC1|EVT|annexed_other|[GetDateString]|[ROOT.GetCountry.GetTag]|[SCOPE.sCountry('votc_evt_country').GetTag]"
+ votc_evt_subject_created:0 "VOTC1|EVT|subject_created|[GetDateString]|[ROOT.GetCountry.GetTag]|[SCOPE.sCountry('votc_evt_country').GetTag]"
+ votc_evt_insult:0          "VOTC1|EVT|insult|[GetDateString]|[ROOT.GetCountry.GetTag]|[SCOPE.sCountry('votc_evt_country').GetTag]"
+ votc_evt_great_power:0     "VOTC1|EVT|great_power_gained|[GetDateString]|[ROOT.GetCountry.GetTag]"
+ votc_evt_regency_start:0   "VOTC1|EVT|regency_start|[GetDateString]|[ROOT.GetCountry.GetTag]"
+ votc_evt_regency_end:0     "VOTC1|EVT|regency_end|[GetDateString]|[ROOT.GetCountry.GetTag]"
+ votc_evt_new_age:0         "VOTC1|EVT|new_age|[GetDateString]|[ROOT.GetCountry.GetTag]"
+ votc_evt_civil_war:0       "VOTC1|EVT|civil_war_start|[GetDateString]|[ROOT.GetCountry.GetTag]"
+ votc_evt_mission_done:0    "VOTC1|EVT|mission_completed|[GetDateString]|[ROOT.GetCountry.GetTag]"

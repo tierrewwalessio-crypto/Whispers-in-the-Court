@@ -1,0 +1,296 @@
+﻿namespace = votc
+
+# Voices of the Court - the surface the player actually sees.
+#
+# Every one of these events is a shell. The title, the body and the option
+# labels all point at keys in
+#   main_menu/localization/english/votc_dynamic_l_english.yml
+# which Court Brain rewrites and hot-reloads (console `reload localization`)
+# immediately before firing the event. So the text is different every time
+# while the event definition never changes.
+#
+# Each scene owns its own block of keys (votc_dlg_*, votc_cnc_*, ...), which
+# is why a chronicle arriving mid-conversation cannot overwrite the words the
+# chancellor is saying.
+#
+# var:votc_<scene>_nopt is how many option slots the middleware filled. The
+# last option of every event is a fallback, so a scene is never a dead end
+# even if the middleware dies between writing the text and firing the event.
+#
+# votc_execute_staged = { slot = N } is how a heavy outcome - a war, a peace,
+# an alliance, a claim - actually happens. The middleware stages it against
+# an option slot; clicking that option fires it. The fallback option clears
+# the staging instead, so walking away from a scene never commits the realm
+# to anything.
+
+# =====================================================================
+# 100 - A conversation
+# =====================================================================
+
+votc.100 = {
+	type = country_event
+	title = votc_dlg_title
+	desc = votc_dlg_body
+	outcome = neutral
+	orphan = yes
+
+	immediate = {
+		votc_restore_scopes = yes
+	}
+
+	option = {
+		name = votc_dlg_o1
+		trigger = { var:votc_dlg_nopt >= 1 }
+		votc_execute_staged = { slot = 1 }
+		votc_talk_reply = { choice = 1 }
+	}
+	option = {
+		name = votc_dlg_o2
+		trigger = { var:votc_dlg_nopt >= 2 }
+		votc_execute_staged = { slot = 2 }
+		votc_talk_reply = { choice = 2 }
+	}
+	option = {
+		name = votc_dlg_o3
+		trigger = { var:votc_dlg_nopt >= 3 }
+		votc_execute_staged = { slot = 3 }
+		votc_talk_reply = { choice = 3 }
+	}
+	option = {
+		name = votc_dlg_o4
+		trigger = { var:votc_dlg_nopt >= 4 }
+		votc_execute_staged = { slot = 4 }
+		votc_talk_reply = { choice = 4 }
+	}
+	option = {
+		name = votc_dlg_leave
+		fallback = yes
+		votc_stage_clear = yes
+		votc_end_talk = yes
+	}
+}
+
+# =====================================================================
+# 200 - The Crown Council
+# =====================================================================
+
+votc.200 = {
+	type = country_event
+	title = votc_cnc_title
+	desc = votc_cnc_body
+	outcome = neutral
+	orphan = yes
+	category = generic_event
+
+	immediate = {
+		votc_restore_scopes = yes
+	}
+
+	option = {
+		name = votc_cnc_o1
+		trigger = { var:votc_cnc_nopt >= 1 }
+		votc_execute_staged = { slot = 1 }
+		votc_council_choice = { choice = 1 }
+	}
+	option = {
+		name = votc_cnc_o2
+		trigger = { var:votc_cnc_nopt >= 2 }
+		votc_execute_staged = { slot = 2 }
+		votc_council_choice = { choice = 2 }
+	}
+	option = {
+		name = votc_cnc_o3
+		trigger = { var:votc_cnc_nopt >= 3 }
+		votc_execute_staged = { slot = 3 }
+		votc_council_choice = { choice = 3 }
+	}
+	option = {
+		name = votc_cnc_o4
+		trigger = { var:votc_cnc_nopt >= 4 }
+		votc_execute_staged = { slot = 4 }
+		votc_council_choice = { choice = 4 }
+	}
+	option = {
+		name = votc_cnc_adjourn
+		fallback = yes
+		votc_stage_clear = yes
+		votc_council_choice = { choice = 0 }
+	}
+}
+
+# =====================================================================
+# 300 - A chronicle
+# =====================================================================
+#
+# Nothing is asked of the player. The consequences, if any, were already
+# applied by the votc_act_* lines that ran just before this fired. This is
+# the mod telling the story of what the player's own decisions did.
+
+votc.300 = {
+	type = country_event
+	title = votc_chr_title
+	desc = votc_chr_body
+	outcome = neutral
+	orphan = yes
+	interface_lock = no
+
+	immediate = {
+		votc_restore_scopes = yes
+	}
+
+	option = {
+		name = votc_chr_read
+		fallback = yes
+	}
+}
+
+# =====================================================================
+# 400 - Someone is asking to be seen
+# =====================================================================
+
+votc.400 = {
+	type = country_event
+	title = votc_knk_title
+	desc = votc_knk_body
+	outcome = neutral
+	orphan = yes
+
+	immediate = {
+		votc_restore_scopes = yes
+	}
+
+	option = {
+		name = votc_knk_o1
+		trigger = { var:votc_knk_nopt >= 1 }
+		votc_execute_staged = { slot = 1 }
+		votc_knock_reply = { choice = 1 }
+	}
+	option = {
+		name = votc_knk_o2
+		trigger = { var:votc_knk_nopt >= 2 }
+		votc_execute_staged = { slot = 2 }
+		votc_knock_reply = { choice = 2 }
+	}
+	option = {
+		name = votc_knk_o3
+		trigger = { var:votc_knk_nopt >= 3 }
+		votc_execute_staged = { slot = 3 }
+		votc_knock_reply = { choice = 3 }
+	}
+	option = {
+		name = votc_knk_refuse
+		fallback = yes
+		votc_stage_clear = yes
+		votc_knock_reply = { choice = 0 }
+	}
+}
+
+# =====================================================================
+# 500 - A stop on the royal progress
+# =====================================================================
+
+votc.500 = {
+	type = country_event
+	title = votc_prg_title
+	desc = votc_prg_body
+	outcome = neutral
+	orphan = yes
+
+	immediate = {
+		votc_restore_scopes = yes
+	}
+
+	option = {
+		name = votc_prg_o1
+		trigger = { var:votc_prg_nopt >= 1 }
+		votc_execute_staged = { slot = 1 }
+		votc_progress_choice = { choice = 1 }
+	}
+	option = {
+		name = votc_prg_o2
+		trigger = { var:votc_prg_nopt >= 2 }
+		votc_execute_staged = { slot = 2 }
+		votc_progress_choice = { choice = 2 }
+	}
+	option = {
+		name = votc_prg_o3
+		trigger = { var:votc_prg_nopt >= 3 }
+		votc_execute_staged = { slot = 3 }
+		votc_progress_choice = { choice = 3 }
+	}
+	option = {
+		name = votc_prg_o4
+		trigger = { var:votc_prg_nopt >= 4 }
+		votc_execute_staged = { slot = 4 }
+		votc_progress_choice = { choice = 4 }
+	}
+	option = {
+		name = votc_prg_ride_on
+		fallback = yes
+		votc_stage_clear = yes
+		votc_progress_choice = { choice = 0 }
+	}
+}
+
+# =====================================================================
+# 600 - An envoy reports back
+# =====================================================================
+
+votc.600 = {
+	type = country_event
+	title = votc_env_title
+	desc = votc_env_body
+	outcome = neutral
+	orphan = yes
+
+	immediate = {
+		votc_restore_scopes = yes
+	}
+
+	option = {
+		name = votc_env_o1
+		trigger = { var:votc_env_nopt >= 1 }
+		votc_execute_staged = { slot = 1 }
+		votc_talk_reply = { choice = 1 }
+	}
+	option = {
+		name = votc_env_o2
+		trigger = { var:votc_env_nopt >= 2 }
+		votc_execute_staged = { slot = 2 }
+		votc_talk_reply = { choice = 2 }
+	}
+	option = {
+		name = votc_env_o3
+		trigger = { var:votc_env_nopt >= 3 }
+		votc_execute_staged = { slot = 3 }
+		votc_talk_reply = { choice = 3 }
+	}
+	option = {
+		name = votc_env_recall
+		fallback = yes
+		votc_stage_clear = yes
+		votc_end_talk = yes
+	}
+}
+
+# =====================================================================
+# 900 - The middleware has something to say
+# =====================================================================
+#
+# Shown when Court Brain cannot reach the Player2 app, the model refused, or
+# a request timed out. An honest notice beats a conversation that silently
+# never arrives.
+
+votc.900 = {
+	type = country_event
+	title = votc_ntc_title
+	desc = votc_ntc_body
+	outcome = negative
+	orphan = yes
+	interface_lock = no
+
+	option = {
+		name = votc_ntc_ok
+		fallback = yes
+	}
+}

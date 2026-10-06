@@ -1,0 +1,166 @@
+﻿# Voices of the Court - the IN channel (Court Brain -> game).
+#
+# The middleware writes an effect script to
+#   Documents/Paradox Interactive/Europa Universalis V/run/votc_in.txt
+# and makes the game execute it with the console command `run votc_in.txt`
+# ("execute effect file in /run"). The file's root scope is the player
+# country.
+#
+# A push file always has the same three parts:
+#
+#   1. votc_in_open = { seq = <n> }         - resync the counter
+#   2. zero or more votc_act_* lines        - the bounded consequences
+#   3. one votc_push_* line                 - show the scene to the player
+#
+# Nothing else is ever written there. Everything the middleware can say is
+# named in this file or in votc_action_effects.txt.
+
+# =====================================================================
+# Framing
+# =====================================================================
+
+votc_in_open = {
+	votc_init_vars = yes
+	set_variable = { name = votc_seq value = $seq$ }
+	set_variable = { name = votc_scene_actions value = 0 }
+	set_variable = { name = votc_scene_spent value = 0 }
+	votc_restore_scopes = yes
+}
+
+# =====================================================================
+# Scenes
+# =====================================================================
+#
+# The AI's prose does not travel through these calls. It is written into
+# main_menu/localization/english/votc_dynamic_l_english.yml, which the
+# middleware rewrites and then hot-reloads with the console `reload`
+# command before running the push file. Each scene owns a fixed block of
+# keys, so two scenes can never overwrite each other's text.
+#
+# $nopt$ is how many of the four option slots the middleware filled in.
+
+votc_push_dialogue = {
+	set_variable = { name = votc_dlg_nopt value = $nopt$ }
+	votc_restore_scopes = yes
+	trigger_event_non_silently = votc.100
+}
+
+votc_push_council = {
+	set_variable = { name = votc_cnc_nopt value = $nopt$ }
+	trigger_event_non_silently = votc.200
+}
+
+# A chronicle has no choices: the realm simply tells the player what
+# happened. This is the passive, "I did not ask for this" channel.
+votc_push_chronicle = {
+	trigger_event_non_silently = votc.300
+}
+
+# Someone has come to the player uninvited.
+votc_push_knock = {
+	set_variable = { name = votc_knk_nopt value = $nopt$ }
+	votc_restore_scopes = yes
+	trigger_event_non_silently = votc.400
+}
+
+votc_push_progress = {
+	set_variable = { name = votc_prg_nopt value = $nopt$ }
+	votc_restore_scopes = yes
+	trigger_event_non_silently = votc.500
+}
+
+votc_push_envoy = {
+	set_variable = { name = votc_env_nopt value = $nopt$ }
+	votc_restore_scopes = yes
+	trigger_event_non_silently = votc.600
+}
+
+# Shown when the middleware itself has something to say - it lost the
+# Player2 app, the model refused, the request timed out. Better an honest
+# notice in the game than a conversation that silently never arrives.
+votc_push_notice = {
+	trigger_event_non_silently = votc.900
+}
+
+# =====================================================================
+# Targets set from outside
+# =====================================================================
+#
+# For a knock or a chronicle the middleware chooses who is involved, so it
+# needs to point at them. Only these three setters exist, and each takes a
+# game object the engine resolves itself - c:FRA, a location id, or a
+# character picked by the mod's own helper below.
+
+votc_in_target_country = {
+	set_variable = { name = votc_tcountry value = $who$ }
+}
+
+votc_in_target_location = {
+	set_variable = { name = votc_tlocation value = $where$ }
+}
+
+# Characters have no stable script token the middleware could write down, so
+# it points at a ROLE and the game resolves who holds that role right now.
+# One effect per role, so nothing has to be compared against a substituted
+# argument (Paradox argument substitution is textual - "1 = 1" is not a
+# trigger).
+
+votc_in_target_ruler = {
+	if = {
+		limit = { has_ruler = yes }
+		ruler ?= { save_scope_as = votc_pick }
+		votc_set_target_char = { who = scope:votc_pick }
+	}
+}
+
+votc_in_target_heir = {
+	if = {
+		limit = { has_heir = yes }
+		heir ?= { save_scope_as = votc_pick }
+		votc_set_target_char = { who = scope:votc_pick }
+	}
+}
+
+votc_in_target_cabinet = {
+	ordered_character = {
+		limit = { owner = root is_alive = yes in_cabinet = yes }
+		order_by = total_abilities
+		max = 1
+		save_scope_as = votc_pick
+	}
+	if = {
+		limit = { exists = scope:votc_pick }
+		votc_set_target_char = { who = scope:votc_pick }
+	}
+}
+
+votc_in_target_general = {
+	ordered_character = {
+		limit = { owner = root is_alive = yes is_general = yes }
+		order_by = total_abilities
+		max = 1
+		save_scope_as = votc_pick
+	}
+	if = {
+		limit = { exists = scope:votc_pick }
+		votc_set_target_char = { who = scope:votc_pick }
+	}
+}
+
+# A voice from outside the inner circle - the one the player never picks.
+votc_in_target_courtier = {
+	random_character = {
+		limit = {
+			owner = root
+			is_alive = yes
+			is_adult = yes
+			is_ruler = no
+			in_cabinet = no
+		}
+		save_scope_as = votc_pick
+	}
+	if = {
+		limit = { exists = scope:votc_pick }
+		votc_set_target_char = { who = scope:votc_pick }
+	}
+}

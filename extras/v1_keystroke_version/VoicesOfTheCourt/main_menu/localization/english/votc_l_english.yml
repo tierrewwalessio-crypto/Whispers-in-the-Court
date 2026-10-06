@@ -1,0 +1,74 @@
+﻿l_english:
+
+ # ===================================================================
+ # Voices of the Court - STATIC INTERFACE TEXT
+ #
+ # Everything the player reads that is NOT written by the AI. Kept in
+ # English to match the rest of the game; the words the court actually
+ # speaks are generated in whatever language you set in Court Brain's
+ # config (language: "it" by default).
+ # ===================================================================
+
+ # --- switching the mod on ----------------------------------------------
+ votc_open_court:0 "Open the Court to Voices"
+ votc_open_court_desc:0 "Let the people of your court speak for themselves. Requires the Court Brain middleware and the Player2 app to be running.\n\n#T What this enables#!\n· Audiences with anyone at court, and with foreign courts through an envoy.\n· The Crown Council, which can issue real edicts.\n· Royal progresses through your own lands.\n· A chronicle that narrates what your decisions actually did."
+ votc_close_court:0 "Dismiss the Voices"
+ votc_close_court_desc:0 "Stop generating court life. Nothing already granted is taken away; the mod simply goes quiet."
+ votc_resync:0 "Send Word to the Chancery"
+ votc_resync_desc:0 "Re-send the full state of the realm to Court Brain. Use this after loading a save, or if you started the middleware after the game."
+
+ # --- audiences -----------------------------------------------------------
+ votc_speak_with:0 "Speak With"
+ votc_speak_with_desc:0 "Grant this person an audience.\n\nWhat comes of it depends on who they are: a ruler will talk of treaties and grievances, a minister of law and revenue, a magnate of his order's privileges, a captain of the army. Any consequence is drawn from a fixed catalogue and paid for out of your court influence, so a conversation can never hand you more than an ordinary event would."
+ votc_speak_with_none:0 "There is no one at court to receive."
+ votc_choose_person:0 "Who will you receive?"
+
+ votc_send_envoy:0 "Send a Private Envoy"
+ votc_send_envoy_desc:0 "Send someone to speak, quietly, with a foreign court.\n\nAn envoy can change how they regard you and how far they trust you. It cannot sign a treaty, break an alliance or start a war - those remain yours to do in the open."
+ votc_send_envoy_none:0 "You know of no court that would receive an envoy."
+ votc_choose_court:0 "Which court will you address?"
+
+ # --- the council ----------------------------------------------------------
+ votc_summon_council:0 "Summon the Crown Council"
+ votc_summon_council_desc:0 "Call your ministers together. They will raise whatever they think most pressing - not whatever you would rather hear - and you may answer with an edict.\n\nAn edict is a real, timed modifier drawn from a curated list, paid for out of court influence."
+ votc_hear_estate:0 "Hear an Estate"
+ votc_hear_estate_desc:0 "Receive the spokesmen of one order of the realm and let them make their case."
+ votc_choose_estate:0 "Whose case will you hear?"
+
+ # --- the progress ----------------------------------------------------------
+ votc_royal_progress:0 "Ride Out on Progress"
+ votc_royal_progress_desc:0 "Leave the capital and show yourself to one of your own towns.\n\nWhat happens there follows the place: its people, its faith, how firmly you hold it and how well it eats. A progress is a year out of a reign, and it can go badly."
+ votc_choose_destination:0 "Where will you ride?"
+
+ # --- cooldown names --------------------------------------------------------
+ votc_talk:0 "Recent Audience"
+ votc_envoy:0 "Envoy on the Road"
+ votc_council:0 "Council Recently Summoned"
+ votc_progress:0 "Recently on Progress"
+
+ # --- modifier names ---------------------------------------------------------
+ votc_edict_trade_charter:0 "Charter of the Merchants"
+ votc_edict_road_ordinance:0 "Ordinance on the Roads"
+ votc_edict_muster:0 "Muster of the Realm"
+ votc_edict_noble_confirmation:0 "Confirmation of Privileges"
+ votc_edict_pious_endowment:0 "Pious Endowment"
+ votc_edict_chancery_reform:0 "Reform of the Chancery"
+ votc_edict_kings_justice:0 "The Crown's Justice"
+ votc_edict_patronage_letters:0 "Patronage of Letters"
+ votc_edict_toleration:0 "Edict of Toleration"
+ votc_edict_debasement:0 "Debasement of the Coin"
+ votc_edict_granaries:0 "The Granaries Opened"
+ votc_edict_summon_estates:0 "The Estates Summoned"
+ votc_progress_acclaimed:0 "The Ruler Was Seen"
+ votc_progress_resented:0 "The Ruler Was Seen, and Resented"
+ votc_char_trusted_counsel:0 "Trusted Counsel"
+ votc_char_slighted:0 "Slighted at Court"
+ votc_char_kings_word:0 "The Crown's Own Word"
+
+ # --- opinion modifier names ----------------------------------------------------
+ votc_opinion_warm_words:0 "Warm Words"
+ votc_opinion_generous_audience:0 "A Generous Audience"
+ votc_opinion_cold_audience:0 "A Cold Audience"
+ votc_opinion_insulting_audience:0 "An Insult at Audience"
+ votc_opinion_royal_promise:0 "A Promise Given"
+ votc_opinion_broken_promise:0 "A Promise Broken"

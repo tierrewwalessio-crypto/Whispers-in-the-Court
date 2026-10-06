@@ -1,0 +1,88 @@
+﻿# Whispers in the Court - reaching a foreign court.
+#
+# EU5's diplomacy screen has a fixed set of categories (the category of an
+# action is read from the localisation key dip_<action>_CATEGORY and must be
+# one of the engine's CATEGORY_* keys), so the mod's actions sit under the
+# friendly actions, each marked with the mod's sign in its name.
+#
+# The mode tells the side panel how the meeting happens:
+#   1 a private envoy   2 a meeting in person on neutral ground   3 a state visit
+
+# A private envoy carries the ruler's words.
+votc_send_envoy = {
+	type = diplomacy
+	category = CATEGORY_FRIENDLY_ACTIONS
+	show_message = no
+	show_message_to_target = no
+	use_enroute = no
+	block_when_at_war = no
+	ai_tick = never
+
+	potential = { scope:actor = { is_human = yes } }
+	allow = { }
+
+	select_trigger = {
+		looking_for_a = country
+		target_flag = recipient
+		name = "votc_choose_court"
+		column = { data = name }
+		visible = { has_ruler = yes }
+	}
+
+	effect = {
+		scope:actor = { votc_signal_envoy = { who = scope:recipient mode = 1 } }
+	}
+}
+
+# The two rulers meet in person.
+votc_request_meeting = {
+	type = diplomacy
+	category = CATEGORY_FRIENDLY_ACTIONS
+	show_message = no
+	show_message_to_target = no
+	use_enroute = no
+	block_when_at_war = no
+	ai_tick = never
+
+	potential = { scope:actor = { is_human = yes } }
+	allow = { }
+
+	select_trigger = {
+		looking_for_a = country
+		target_flag = recipient
+		name = "votc_choose_court"
+		column = { data = name }
+		visible = { has_ruler = yes }
+	}
+
+	effect = {
+		scope:actor = { votc_signal_envoy = { who = scope:recipient mode = 2 } }
+	}
+}
+
+# The ruler travels to their court.
+votc_state_visit = {
+	type = diplomacy
+	category = CATEGORY_FRIENDLY_ACTIONS
+	show_message = no
+	show_message_to_target = no
+	use_enroute = no
+	block_when_at_war = no
+	ai_tick = never
+
+	potential = { scope:actor = { is_human = yes } }
+	allow = { }
+
+	select_trigger = {
+		looking_for_a = country
+		target_flag = recipient
+		name = "votc_choose_court"
+		column = { data = name }
+		visible = { has_ruler = yes }
+	}
+
+	effect = {
+		scope:actor = { votc_signal_envoy = { who = scope:recipient mode = 3 } }
+	}
+}
+

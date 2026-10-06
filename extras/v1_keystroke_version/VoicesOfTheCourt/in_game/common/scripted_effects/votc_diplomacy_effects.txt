@@ -1,0 +1,424 @@
+﻿# Voices of the Court - CONSEQUENCES BETWEEN CROWNS.
+#
+# A conversation with a foreign court can end in anything a conversation
+# between crowns really could: an alliance, a truce, a guarantee, a claim
+# pressed, a war declared, a war ended. The middleware decides what the
+# scene has earned; the model is told, in its system prompt, to weigh the
+# balance of power, the standing grievances and the plausibility of the
+# outcome before reaching for any of it.
+#
+# TWO SAFEGUARDS, and they are different in kind:
+#
+# 1. THE PLAYER'S HAND. Nothing irreversible happens behind the player's
+#    back. The middleware STAGES a heavy outcome against one of the scene's
+#    option slots (votc_stage), and it only fires when the player clicks
+#    that option (votc_execute_staged, called from the event). An envoy can
+#    come home saying "they will have war over this" - the war itself is
+#    always the player's click.
+#
+# 2. THE ENGINE'S HAND. Every action below re-checks the situation at the
+#    moment it fires: you cannot ally someone you are at war with, declare
+#    war on an ally, make peace with a country you are not fighting, or
+#    subjugate a realm that is not beaten. If the world moved between the
+#    scene being written and the option being clicked, the action refuses
+#    itself and says so in the log.
+#
+# Cheap, reversible outcomes (opinion, trust, favours, a gift, a claim) do
+# not need staging and may be applied directly by the middleware; they live
+# in the "immediate" section at the bottom of this file.
+
+# =====================================================================
+# Staging
+# =====================================================================
+#
+# kind:
+#   0  nothing
+#   1  declare war            (cb slot picks the casus belli)
+#   2  white peace - leave every war against them
+#   3  form an alliance
+#   4  break the alliance
+#   5  guarantee their independence
+#   6  grant them military access
+#   7  press a claim: gain a casus belli on them
+#   8  swear a truce, five years, mutual
+#   9  take their submission as a subject   (only from a won war)
+#
+# cb:
+#   1  cb_war_from_event        a quarrel that got out of hand
+#   2  cb_insulted_us           honour
+#   3  cb_claim_throne          dynastic right
+#   4  cb_humiliate             to shame them
+#   5  cb_religious_conformance faith
+#   6  cb_trade_conflict        trade
+#   7  cb_border_war            a disputed border
+#   8  cb_subjugation           to make them bend the knee
+
+votc_stage = {
+	set_variable = { name = votc_stage_$slot$ value = $kind$ }
+	set_variable = { name = votc_stage_cb_$slot$ value = $cb$ }
+}
+
+votc_stage_clear = {
+	set_variable = { name = votc_stage_1 value = 0 }
+	set_variable = { name = votc_stage_2 value = 0 }
+	set_variable = { name = votc_stage_3 value = 0 }
+	set_variable = { name = votc_stage_4 value = 0 }
+	set_variable = { name = votc_stage_cb_1 value = 0 }
+	set_variable = { name = votc_stage_cb_2 value = 0 }
+	set_variable = { name = votc_stage_cb_3 value = 0 }
+	set_variable = { name = votc_stage_cb_4 value = 0 }
+}
+
+# Called by every event option before it reports the player's choice.
+# Slots the middleware left at 0 do nothing at all, which is the normal case.
+votc_execute_staged = {
+	if = {
+		limit = { has_variable = votc_stage_$slot$ }
+		if = {
+			limit = { var:votc_stage_$slot$ = 1 }
+			votc_dip_declare_war = { cbvar = votc_stage_cb_$slot$ }
+		}
+		else_if = {
+			limit = { var:votc_stage_$slot$ = 2 }
+			votc_dip_white_peace = yes
+		}
+		else_if = {
+			limit = { var:votc_stage_$slot$ = 3 }
+			votc_dip_form_alliance = yes
+		}
+		else_if = {
+			limit = { var:votc_stage_$slot$ = 4 }
+			votc_dip_break_alliance = yes
+		}
+		else_if = {
+			limit = { var:votc_stage_$slot$ = 5 }
+			votc_dip_guarantee = yes
+		}
+		else_if = {
+			limit = { var:votc_stage_$slot$ = 6 }
+			votc_dip_military_access = yes
+		}
+		else_if = {
+			limit = { var:votc_stage_$slot$ = 7 }
+			votc_dip_press_claim = { cbvar = votc_stage_cb_$slot$ }
+		}
+		else_if = {
+			limit = { var:votc_stage_$slot$ = 8 }
+			votc_dip_truce = yes
+		}
+		else_if = {
+			limit = { var:votc_stage_$slot$ = 9 }
+			votc_dip_subjugate = yes
+		}
+	}
+	votc_stage_clear = yes
+}
+
+# =====================================================================
+# War
+# =====================================================================
+
+# Refuses if: there is no counterpart, we are already fighting them, we are
+# sworn to them, a truce stands, or they are our own overlord. Those are the
+# cases where a war declaration would be either impossible or a betrayal the
+# player never agreed to.
+votc_dip_declare_war = {
+	votc_try_spend = { c = war }
+	if = {
+		limit = {
+			var:votc_spend_ok = 1
+			exists = var:votc_tcountry
+			NOT = { is_at_war_with = var:votc_tcountry }
+			NOT = { is_allied_with = { target = var:votc_tcountry } }
+			NOT = { has_truce_with = var:votc_tcountry }
+			NOT = { is_subject_of = var:votc_tcountry }
+			knows_country = var:votc_tcountry
+		}
+		if = {
+			limit = { var:$cbvar$ = 2 }
+			declare_war_with_cb = { target = var:votc_tcountry type = casus_belli:cb_insulted_us }
+		}
+		else_if = {
+			limit = { var:$cbvar$ = 3 }
+			declare_war_with_cb = { target = var:votc_tcountry type = casus_belli:cb_claim_throne }
+		}
+		else_if = {
+			limit = { var:$cbvar$ = 4 }
+			declare_war_with_cb = { target = var:votc_tcountry type = casus_belli:cb_humiliate }
+		}
+		else_if = {
+			limit = { var:$cbvar$ = 5 }
+			declare_war_with_cb = { target = var:votc_tcountry type = casus_belli:cb_religious_conformance }
+		}
+		else_if = {
+			limit = { var:$cbvar$ = 6 }
+			declare_war_with_cb = { target = var:votc_tcountry type = casus_belli:cb_trade_conflict }
+		}
+		else_if = {
+			limit = { var:$cbvar$ = 7 }
+			declare_war_with_cb = { target = var:votc_tcountry type = casus_belli:cb_border_war }
+		}
+		else_if = {
+			limit = { var:$cbvar$ = 8 }
+			declare_war_with_cb = { target = var:votc_tcountry type = casus_belli:cb_subjugation }
+		}
+		else = {
+			declare_war_with_cb = { target = var:votc_tcountry type = casus_belli:cb_war_from_event }
+		}
+	}
+	else_if = {
+		limit = { var:votc_spend_ok = 1 }
+		votc_log_seq = { key = votc_ack_refused_invalid }
+	}
+}
+
+# A negotiated end: we walk away from every war we are fighting against
+# them, and a truce holds the peace afterwards so the AI cannot use this to
+# farm free wars.
+votc_dip_white_peace = {
+	votc_try_spend = { c = peace }
+	if = {
+		limit = {
+			var:votc_spend_ok = 1
+			exists = var:votc_tcountry
+			is_at_war_with = var:votc_tcountry
+		}
+		leave_all_wars_with = var:votc_tcountry
+		add_truce_with = { target = var:votc_tcountry mutual = yes years = 5 }
+	}
+	else_if = {
+		limit = { var:votc_spend_ok = 1 }
+		votc_log_seq = { key = votc_ack_refused_invalid }
+	}
+}
+
+# Only from a position of victory: they must already be our enemy in a war
+# and clearly beaten in the field. Outside that, submission is not something
+# a conversation produces.
+votc_dip_subjugate = {
+	votc_try_spend = { c = subjugate }
+	if = {
+		limit = {
+			var:votc_spend_ok = 1
+			exists = var:votc_tcountry
+			is_at_war_with = var:votc_tcountry
+			var:votc_tcountry = {
+				is_subject = no
+				army_size < root.votc_c_army_third
+				num_locations < root.votc_c_locations_half
+			}
+		}
+		leave_all_wars_with = var:votc_tcountry
+		var:votc_tcountry = { make_subject_of = { target = root type = subject_type:vassal } }
+	}
+	else_if = {
+		limit = { var:votc_spend_ok = 1 }
+		votc_log_seq = { key = votc_ack_refused_invalid }
+	}
+}
+
+# =====================================================================
+# Pacts
+# =====================================================================
+
+votc_dip_form_alliance = {
+	votc_try_spend = { c = pact }
+	if = {
+		limit = {
+			var:votc_spend_ok = 1
+			exists = var:votc_tcountry
+			NOT = { is_at_war_with = var:votc_tcountry }
+			NOT = { is_allied_with = { target = var:votc_tcountry } }
+			knows_country = var:votc_tcountry
+		}
+		create_relation = {
+			first = this
+			second = var:votc_tcountry
+			type = relation_type:alliance
+		}
+	}
+	else_if = {
+		limit = { var:votc_spend_ok = 1 }
+		votc_log_seq = { key = votc_ack_refused_invalid }
+	}
+}
+
+# Breaking a sworn alliance is a real betrayal, and it is priced like one:
+# they remember it, and everyone can see it happened.
+votc_dip_break_alliance = {
+	votc_try_spend = { c = pact }
+	if = {
+		limit = {
+			var:votc_spend_ok = 1
+			exists = var:votc_tcountry
+			is_allied_with = { target = var:votc_tcountry }
+		}
+		remove_relation = {
+			first = this
+			second = var:votc_tcountry
+			type = relation_type:alliance
+		}
+		var:votc_tcountry = {
+			add_opinion = { target = root modifier = votc_opinion_broken_promise }
+		}
+		add_trust = { target = var:votc_tcountry value = -20 }
+	}
+	else_if = {
+		limit = { var:votc_spend_ok = 1 }
+		votc_log_seq = { key = votc_ack_refused_invalid }
+	}
+}
+
+votc_dip_guarantee = {
+	votc_try_spend = { c = pact }
+	if = {
+		limit = {
+			var:votc_spend_ok = 1
+			exists = var:votc_tcountry
+			NOT = { is_at_war_with = var:votc_tcountry }
+			knows_country = var:votc_tcountry
+		}
+		create_relation = {
+			first = this
+			second = var:votc_tcountry
+			type = relation_type:guarantee
+		}
+	}
+	else_if = {
+		limit = { var:votc_spend_ok = 1 }
+		votc_log_seq = { key = votc_ack_refused_invalid }
+	}
+}
+
+votc_dip_military_access = {
+	votc_try_spend = { c = pact }
+	if = {
+		limit = {
+			var:votc_spend_ok = 1
+			exists = var:votc_tcountry
+			NOT = { is_at_war_with = var:votc_tcountry }
+			knows_country = var:votc_tcountry
+		}
+		create_relation = {
+			first = var:votc_tcountry
+			second = this
+			type = relation_type:military_access
+		}
+	}
+	else_if = {
+		limit = { var:votc_spend_ok = 1 }
+		votc_log_seq = { key = votc_ack_refused_invalid }
+	}
+}
+
+votc_dip_truce = {
+	votc_try_spend = { c = truce }
+	if = {
+		limit = {
+			var:votc_spend_ok = 1
+			exists = var:votc_tcountry
+			NOT = { is_at_war_with = var:votc_tcountry }
+		}
+		add_truce_with = { target = var:votc_tcountry mutual = yes years = 5 }
+	}
+	else_if = {
+		limit = { var:votc_spend_ok = 1 }
+		votc_log_seq = { key = votc_ack_refused_invalid }
+	}
+}
+
+# A claim pressed in words now, to be pressed in arms later - or never.
+votc_dip_press_claim = {
+	votc_try_spend = { c = cb }
+	if = {
+		limit = {
+			var:votc_spend_ok = 1
+			exists = var:votc_tcountry
+			knows_country = var:votc_tcountry
+		}
+		if = {
+			limit = { var:$cbvar$ = 3 }
+			add_casus_belli = { target = var:votc_tcountry type = casus_belli:cb_claim_throne }
+		}
+		else_if = {
+			limit = { var:$cbvar$ = 4 }
+			add_casus_belli = { target = var:votc_tcountry type = casus_belli:cb_humiliate }
+		}
+		else_if = {
+			limit = { var:$cbvar$ = 5 }
+			add_casus_belli = { target = var:votc_tcountry type = casus_belli:cb_religious_conformance }
+		}
+		else_if = {
+			limit = { var:$cbvar$ = 6 }
+			add_casus_belli = { target = var:votc_tcountry type = casus_belli:cb_trade_conflict }
+		}
+		else_if = {
+			limit = { var:$cbvar$ = 7 }
+			add_casus_belli = { target = var:votc_tcountry type = casus_belli:cb_border_war }
+		}
+		else = {
+			add_casus_belli = { target = var:votc_tcountry type = casus_belli:cb_insulted_us }
+		}
+	}
+	else_if = {
+		limit = { var:votc_spend_ok = 1 }
+		votc_log_seq = { key = votc_ack_refused_invalid }
+	}
+}
+
+# =====================================================================
+# Immediate outcomes - reversible, so they need no staging
+# =====================================================================
+
+votc_act_favors_gain = {
+	votc_try_spend = { c = opinion }
+	if = {
+		limit = {
+			var:votc_spend_ok = 1
+			exists = var:votc_tcountry
+		}
+		add_favors = { target = var:votc_tcountry value = 5 }
+	}
+}
+
+# A purse pressed into the right hands. We pay; they remember it.
+votc_act_gift_gold = {
+	votc_try_spend = { c = gift }
+	if = {
+		limit = {
+			var:votc_spend_ok = 1
+			exists = var:votc_tcountry
+			gold > votc_gold_mild
+		}
+		add_gold = { value = votc_gold_mild multiply = -1 }
+		var:votc_tcountry = {
+			add_gold = root.votc_gold_mild
+			add_opinion = { target = root modifier = votc_opinion_generous_audience }
+		}
+	}
+}
+
+votc_act_rival_declare = {
+	votc_try_spend = { c = rival }
+	if = {
+		limit = {
+			var:votc_spend_ok = 1
+			exists = var:votc_tcountry
+			NOT = { is_rival_of = var:votc_tcountry }
+			knows_country = var:votc_tcountry
+		}
+		add_rival = var:votc_tcountry
+	}
+}
+
+votc_act_rival_drop = {
+	votc_try_spend = { c = rival }
+	if = {
+		limit = {
+			var:votc_spend_ok = 1
+			exists = var:votc_tcountry
+			is_rival_of = var:votc_tcountry
+		}
+		remove_rival = var:votc_tcountry
+	}
+}

@@ -1,0 +1,429 @@
+﻿namespace = votc
+
+# Whispers in the Court - the scenes that arrive in game.
+#
+# The conversation itself happens in Court Brain's side panel. What comes
+# back into the game is the RESULT: an outcome, a page of chronicle, someone
+# asking to be received. Titles and bodies point at keys in
+# main_menu/localization/english/votc_dynamic_l_english.yml, which Court
+# Brain rewrites and the bridge widget reloads just before the event fires.
+#
+# Every event that tells a story offers "Rispondi di persona": it raises a
+# signal and Court Brain's panel slides open on that very scene.
+
+# =====================================================================
+# 100 - The outcome of an audience, a council, an envoy, a progress
+# =====================================================================
+
+votc.100 = {
+	type = country_event
+	title = {
+		first_valid = {
+			triggered_desc = { trigger = { NOT = { votc_scene_ok = { kind = out } } } desc = votc_void_title }
+			desc = votc_out_title
+		}
+	}
+	desc = {
+		first_valid = {
+			triggered_desc = { trigger = { NOT = { votc_scene_ok = { kind = out } } } desc = votc_void_body }
+			desc = votc_out_body
+		}
+	}
+	outcome = neutral
+
+	immediate = {
+		var:votc_tchar ?= { save_scope_as = votc_speaker }
+	}
+
+	# The consequences are applied HERE, not before the event: so the game's
+	# own tooltip on the button lists exactly what changes. The custom
+	# tooltip below it says what Court Brain asked for, to compare.
+	option = {
+		name = votc_out_ok
+		if = { limit = { votc_scene_ok = { kind = out } } votc_apply_queue = yes }
+		custom_tooltip = votc_out_requested
+	}
+	option = {
+		name = votc_opt_reply
+		if = { limit = { votc_scene_ok = { kind = out } } votc_apply_queue = yes }
+		custom_tooltip = votc_out_requested
+		votc_signal_reply = yes
+	}
+	# The page was written by the royal biographer, a person of the court:
+	# the ruler may go and speak with them - praise, correct, or dismiss them.
+	option = {
+		name = votc_opt_biographer
+		if = { limit = { votc_scene_ok = { kind = out } } votc_apply_queue = yes }
+		custom_tooltip = votc_out_requested
+		votc_signal_biographer = yes
+	}
+	option = {
+		name = votc_opt_book
+		if = { limit = { votc_scene_ok = { kind = out } } votc_apply_queue = yes }
+		custom_tooltip = votc_out_requested
+		custom_tooltip = votc_book_tt
+		votc_signal_book = yes
+	}
+}
+
+# =====================================================================
+# 110 - The reign has ended: the biographer's account of a life
+# =====================================================================
+
+votc.110 = {
+	type = country_event
+	title = {
+		first_valid = {
+			triggered_desc = { trigger = { NOT = { votc_scene_ok = { kind = obt } } } desc = votc_void_title }
+			desc = votc_obt_title
+		}
+	}
+	desc = {
+		first_valid = {
+			triggered_desc = { trigger = { NOT = { votc_scene_ok = { kind = obt } } } desc = votc_void_body }
+			desc = votc_obt_body
+		}
+	}
+	outcome = neutral
+	interface_lock = no
+
+	option = {
+		name = votc_obt_ok
+	}
+	option = {
+		name = votc_obt_read
+		custom_tooltip = votc_life_tt
+		votc_signal_life = yes
+	}
+}
+
+# =====================================================================
+# 120 - A hundred years of the realm: the biographer offers its history
+# =====================================================================
+
+votc.120 = {
+	type = country_event
+	title = {
+		first_valid = {
+			triggered_desc = { trigger = { NOT = { votc_scene_ok = { kind = cen } } } desc = votc_void_title }
+			desc = votc_cen_title
+		}
+	}
+	desc = {
+		first_valid = {
+			triggered_desc = { trigger = { NOT = { votc_scene_ok = { kind = cen } } } desc = votc_void_body }
+			desc = votc_cen_body
+		}
+	}
+	outcome = neutral
+	interface_lock = no
+
+	option = {
+		name = votc_cen_read
+		custom_tooltip = votc_cen_tt
+		votc_signal_century = yes
+	}
+	option = {
+		name = votc_cen_later
+	}
+}
+
+# =====================================================================
+# 300 - A page of chronicle
+# =====================================================================
+
+votc.300 = {
+	type = country_event
+	title = {
+		first_valid = {
+			triggered_desc = { trigger = { NOT = { votc_scene_ok = { kind = chr } } } desc = votc_void_title }
+			desc = votc_chr_title
+		}
+	}
+	desc = {
+		first_valid = {
+			triggered_desc = { trigger = { NOT = { votc_scene_ok = { kind = chr } } } desc = votc_void_body }
+			desc = votc_chr_body
+		}
+	}
+	outcome = neutral
+	interface_lock = no
+
+	option = {
+		name = votc_chr_ok
+		if = { limit = { votc_scene_ok = { kind = chr } } votc_apply_chronicle = yes }
+		custom_tooltip = votc_chr_requested
+	}
+	option = {
+		name = votc_opt_reply
+		if = { limit = { votc_scene_ok = { kind = chr } } votc_apply_chronicle = yes }
+		custom_tooltip = votc_chr_requested
+		votc_signal_reply = yes
+	}
+	option = {
+		name = votc_opt_book
+		if = { limit = { votc_scene_ok = { kind = chr } } votc_apply_chronicle = yes }
+		custom_tooltip = votc_chr_requested
+		custom_tooltip = votc_book_tt
+		votc_signal_book = yes
+	}
+}
+
+# =====================================================================
+# 400 - Someone asks to be received
+# =====================================================================
+
+votc.400 = {
+	type = country_event
+	title = {
+		first_valid = {
+			triggered_desc = { trigger = { NOT = { votc_scene_ok = { kind = knk } } } desc = votc_void_title }
+			desc = votc_knk_title
+		}
+	}
+	desc = {
+		first_valid = {
+			triggered_desc = { trigger = { NOT = { votc_scene_ok = { kind = knk } } } desc = votc_void_body }
+			desc = votc_knk_body
+		}
+	}
+	outcome = neutral
+
+	immediate = {
+		var:votc_knocker ?= { save_scope_as = votc_speaker }
+	}
+
+	option = {
+		name = votc_knk_receive
+		trigger = { exists = var:votc_knocker }
+		var:votc_knocker ?= { save_scope_as = votc_knock_guest }
+		votc_signal_talk = { who = scope:votc_knock_guest }
+	}
+	option = {
+		name = votc_knk_refuse
+	}
+}
+
+
+# =====================================================================
+# 500 - A story: a situation with choices, often one stage of a longer arc
+# =====================================================================
+#
+# Court Brain writes the situation and three choices; each choice has its own
+# consequences, parked in its own slots (votc_qo<n>_*), so the tooltip of
+# every button shows exactly what that choice does. The choice is reported
+# back (votc_signal_arc) and the story may go on in a later event.
+
+votc.500 = {
+	type = country_event
+	title = {
+		first_valid = {
+			triggered_desc = { trigger = { NOT = { votc_scene_ok = { kind = arc } } } desc = votc_void_title }
+			desc = votc_arc_title
+		}
+	}
+	desc = {
+		first_valid = {
+			triggered_desc = { trigger = { NOT = { votc_scene_ok = { kind = arc } } } desc = votc_void_body }
+			desc = votc_arc_body
+		}
+	}
+	outcome = neutral
+
+	option = {
+		name = votc_arc_opt1
+		trigger = { votc_scene_ok = { kind = arc } }
+		votc_apply_option = { o = 1 }
+		custom_tooltip = votc_arc_req1
+		votc_signal_arc = { choice = 1 }
+	}
+	option = {
+		name = votc_arc_opt2
+		trigger = { votc_scene_ok = { kind = arc } }
+		votc_apply_option = { o = 2 }
+		custom_tooltip = votc_arc_req2
+		votc_signal_arc = { choice = 2 }
+	}
+	option = {
+		name = votc_arc_opt3
+		trigger = { votc_scene_ok = { kind = arc } }
+		votc_apply_option = { o = 3 }
+		custom_tooltip = votc_arc_req3
+		votc_signal_arc = { choice = 3 }
+	}
+	option = {
+		name = votc_arc_reply
+		trigger = { votc_scene_ok = { kind = arc } }
+		votc_queue_clear_options = yes
+		votc_signal_arc = { choice = 9 }
+	}
+	option = {
+		name = votc_void_ok
+		trigger = { NOT = { votc_scene_ok = { kind = arc } } }
+		votc_queue_clear_options = yes
+	}
+}
+
+# =====================================================================
+# 900 - Court Brain speaking for itself
+# =====================================================================
+
+votc.900 = {
+	type = country_event
+	title = votc_ntc_title
+	desc = votc_ntc_body
+	outcome = negative
+	interface_lock = no
+
+	option = {
+		name = votc_ntc_ok
+	}
+}
+
+# EU5 was started without -debug_mode (votc_show_need_debug): fixed texts only.
+votc.920 = {
+	type = country_event
+	title = votc_need_debug_title
+	desc = votc_need_debug_body
+	outcome = negative
+	interface_lock = no
+
+	option = {
+		name = votc_need_debug_ok
+	}
+}
+
+# A ruler's order that the world did not allow (votc_order_effects.txt).
+votc.910 = {
+	type = country_event
+	outcome = negative
+	interface_lock = no
+	trigger = { has_variable = votc_order_fail }
+	title = {
+		first_valid = {
+			triggered_desc = { trigger = { var:votc_order_fail_what = 1 } desc = votc_order_fail_title_1 }
+			triggered_desc = { trigger = { var:votc_order_fail_what = 2 } desc = votc_order_fail_title_2 }
+			triggered_desc = { trigger = { var:votc_order_fail_what = 3 } desc = votc_order_fail_title_3 }
+			triggered_desc = { trigger = { var:votc_order_fail_what = 4 } desc = votc_order_fail_title_4 }
+			triggered_desc = { trigger = { var:votc_order_fail_what = 5 } desc = votc_order_fail_title_5 }
+			triggered_desc = { trigger = { var:votc_order_fail_what = 6 } desc = votc_order_fail_title_6 }
+			triggered_desc = { trigger = { var:votc_order_fail_what = 7 } desc = votc_order_fail_title_7 }
+			triggered_desc = { trigger = { var:votc_order_fail_what = 8 } desc = votc_order_fail_title_8 }
+			triggered_desc = { trigger = { var:votc_order_fail_what = 9 } desc = votc_order_fail_title_9 }
+			triggered_desc = { trigger = { var:votc_order_fail_what = 11 } desc = votc_order_fail_title_11 }
+			triggered_desc = { trigger = { var:votc_order_fail_what = 12 } desc = votc_order_fail_title_12 }
+			triggered_desc = { trigger = { var:votc_order_fail_what = 13 } desc = votc_order_fail_title_13 }
+			triggered_desc = { trigger = { var:votc_order_fail_what = 14 } desc = votc_order_fail_title_14 }
+			triggered_desc = { trigger = { always = yes } desc = votc_order_fail_title_0 }
+		}
+	}
+	desc = {
+		first_valid = {
+			triggered_desc = { trigger = { var:votc_order_fail = 1 } desc = votc_order_fail_reason_1 }
+			triggered_desc = { trigger = { var:votc_order_fail = 2 } desc = votc_order_fail_reason_2 }
+			triggered_desc = { trigger = { var:votc_order_fail = 3 } desc = votc_order_fail_reason_3 }
+			triggered_desc = { trigger = { var:votc_order_fail = 4 } desc = votc_order_fail_reason_4 }
+			triggered_desc = { trigger = { var:votc_order_fail = 5 } desc = votc_order_fail_reason_5 }
+			triggered_desc = { trigger = { var:votc_order_fail = 6 } desc = votc_order_fail_reason_6 }
+			triggered_desc = { trigger = { var:votc_order_fail = 7 } desc = votc_order_fail_reason_7 }
+			triggered_desc = { trigger = { var:votc_order_fail = 8 } desc = votc_order_fail_reason_8 }
+			triggered_desc = { trigger = { var:votc_order_fail = 9 } desc = votc_order_fail_reason_9 }
+			triggered_desc = { trigger = { var:votc_order_fail = 10 } desc = votc_order_fail_reason_10 }
+			triggered_desc = { trigger = { var:votc_order_fail = 11 } desc = votc_order_fail_reason_11 }
+			triggered_desc = { trigger = { var:votc_order_fail = 12 } desc = votc_order_fail_reason_12 }
+			triggered_desc = { trigger = { var:votc_order_fail = 13 } desc = votc_order_fail_reason_13 }
+			triggered_desc = { trigger = { var:votc_order_fail = 14 } desc = votc_order_fail_reason_14 }
+			triggered_desc = { trigger = { var:votc_order_fail = 15 } desc = votc_order_fail_reason_15 }
+			triggered_desc = { trigger = { var:votc_order_fail = 16 } desc = votc_order_fail_reason_16 }
+			triggered_desc = { trigger = { var:votc_order_fail = 17 } desc = votc_order_fail_reason_17 }
+			triggered_desc = { trigger = { var:votc_order_fail = 18 } desc = votc_order_fail_reason_18 }
+			triggered_desc = { trigger = { always = yes } desc = votc_order_fail_reason_11 }
+		}
+	}
+	option = {
+		name = votc_ntc_ok
+		remove_variable = votc_order_fail
+		remove_variable = votc_order_fail_what
+	}
+}
+
+# =====================================================================
+# 600 - A moment of a battle the ruler commands (courtbrain/battle.py)
+# =====================================================================
+#
+# The game is paused while it is open. What each order does is rolled by
+# Court Brain after the choice and shown on the field: the next moment, or
+# the account of the battle, tells how it went.
+
+votc.600 = {
+	type = country_event
+	title = {
+		first_valid = {
+			triggered_desc = { trigger = { NOT = { votc_scene_ok = { kind = bt } } } desc = votc_void_title }
+			desc = votc_bt_title
+		}
+	}
+	desc = {
+		first_valid = {
+			triggered_desc = { trigger = { NOT = { votc_scene_ok = { kind = bt } } } desc = votc_void_body }
+			desc = votc_bt_body
+		}
+	}
+	outcome = neutral
+
+	option = {
+		name = votc_bt_opt1
+		trigger = { votc_scene_ok = { kind = bt } }
+		custom_tooltip = votc_bt_hidden_tt
+		votc_battle_choose = { n = 1 }
+	}
+	option = {
+		name = votc_bt_opt2
+		trigger = { votc_scene_ok = { kind = bt } }
+		custom_tooltip = votc_bt_hidden_tt
+		votc_battle_choose = { n = 2 }
+	}
+	option = {
+		name = votc_bt_opt3
+		trigger = { votc_scene_ok = { kind = bt } }
+		custom_tooltip = votc_bt_hidden_tt
+		votc_battle_choose = { n = 3 }
+	}
+	option = {
+		name = votc_bt_opt_self
+		trigger = { votc_scene_ok = { kind = bt } }
+		custom_tooltip = votc_bt_self_tt
+		votc_battle_choose = { n = 4 }
+	}
+	option = {
+		name = votc_void_ok
+		trigger = { NOT = { votc_scene_ok = { kind = bt } } }
+	}
+}
+
+# 610 - The battle is over: how it was decided.
+votc.610 = {
+	type = country_event
+	title = {
+		first_valid = {
+			triggered_desc = { trigger = { NOT = { votc_scene_ok = { kind = bte } } } desc = votc_void_title }
+			desc = votc_bt_end_title
+		}
+	}
+	desc = {
+		first_valid = {
+			triggered_desc = { trigger = { NOT = { votc_scene_ok = { kind = bte } } } desc = votc_void_body }
+			desc = votc_bt_end_body
+		}
+	}
+	outcome = neutral
+
+	option = {
+		name = votc_bt_end_ok
+	}
+	option = {
+		name = votc_opt_biographer
+		votc_signal_biographer = yes
+	}
+}
+

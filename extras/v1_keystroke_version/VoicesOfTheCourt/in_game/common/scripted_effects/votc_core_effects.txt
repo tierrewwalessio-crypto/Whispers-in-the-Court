@@ -1,0 +1,384 @@
+﻿# Voices of the Court - session core.
+#
+# Scope convention: every effect in this file runs in COUNTRY scope and
+# assumes that country is the human player. The console `run` command
+# executes its file with the player country as root, so the middleware can
+# call any of these directly.
+
+# =====================================================================
+# Bookkeeping
+# =====================================================================
+
+# Idempotent. Safe to call every tick and from the console.
+votc_init_vars = {
+	if = {
+		limit = { NOT = { has_variable = votc_seq } }
+		set_variable = { name = votc_seq value = 0 }
+	}
+	if = {
+		limit = { NOT = { has_variable = votc_turn } }
+		set_variable = { name = votc_turn value = 0 }
+	}
+	if = {
+		limit = { NOT = { has_variable = votc_a1 } }
+		set_variable = { name = votc_a1 value = 0 }
+	}
+	if = {
+		limit = { NOT = { has_variable = votc_a2 } }
+		set_variable = { name = votc_a2 value = 0 }
+	}
+	if = {
+		limit = { NOT = { has_variable = votc_a3 } }
+		set_variable = { name = votc_a3 value = 0 }
+	}
+	if = {
+		limit = { NOT = { has_variable = votc_budget } }
+		set_variable = { name = votc_budget value = votc_budget_start }
+	}
+	if = {
+		limit = { NOT = { has_variable = votc_scene_actions } }
+		set_variable = { name = votc_scene_actions value = 0 }
+	}
+	if = {
+		limit = { NOT = { has_variable = votc_scene_spent } }
+		set_variable = { name = votc_scene_spent value = 0 }
+	}
+	if = {
+		limit = { NOT = { has_variable = votc_spend_ok } }
+		set_variable = { name = votc_spend_ok value = 0 }
+	}
+}
+
+# The player turns the mod on from the "Voices of the Court" action, or the
+# middleware does it over the console.
+votc_enable = {
+	votc_init_vars = yes
+	set_variable = { name = votc_enabled value = 1 }
+	votc_handshake = yes
+}
+
+votc_disable = {
+	votc_log = { key = votc_ctx_bye }
+	remove_variable = votc_enabled
+}
+
+# Arguments carried by the next outgoing line.
+votc_set_args = {
+	set_variable = { name = votc_a1 value = $a1$ }
+	set_variable = { name = votc_a2 value = $a2$ }
+	set_variable = { name = votc_a3 value = $a3$ }
+}
+
+# =====================================================================
+# Targets
+# =====================================================================
+#
+# A saved scope only lives for one unbroken script chain. The player clicks
+# now; Court Brain answers a few seconds later through a fresh `run` chain,
+# and the event it fires is a third chain again. So the target of a scene is
+# kept in a country VARIABLE - variables hold object references in EU5 (see
+# common/generic_actions/chinese_treasure_voyages.txt, which stores a location
+# the same way) and they survive saving and loading.
+#
+# votc_restore_scopes turns those variables back into the named scopes the
+# localisation templates expect, and is called before every log line.
+
+votc_set_target_char = {
+	set_variable = { name = votc_tchar value = $who$ }
+}
+
+votc_set_target_country = {
+	set_variable = { name = votc_tcountry value = $who$ }
+}
+
+votc_set_target_location = {
+	set_variable = { name = votc_tlocation value = $where$ }
+}
+
+votc_clear_targets = {
+	remove_variable = votc_tchar
+	remove_variable = votc_tcountry
+	remove_variable = votc_tlocation
+}
+
+votc_restore_scopes = {
+	if = {
+		limit = { exists = var:votc_tchar }
+		var:votc_tchar = { save_scope_as = votc_target_char }
+	}
+	if = {
+		limit = { exists = var:votc_tcountry }
+		var:votc_tcountry = { save_scope_as = votc_target_country }
+	}
+	if = {
+		limit = { exists = var:votc_tlocation }
+		var:votc_tlocation = { save_scope_as = votc_target_location }
+	}
+}
+
+# =====================================================================
+# Handshake
+# =====================================================================
+
+# Announces the mod, then probes both log effects and the localisation data
+# functions in one go. Court Brain decides from the result which channel is
+# live and whether [ROOT.ScriptValue(...)] resolved - if it did not, the raw
+# bracket text shows up in the log and the middleware falls back to a
+# reduced, name-only context instead of feeding the model garbage numbers.
+votc_handshake = {
+	votc_init_vars = yes
+	votc_log_seq = { key = votc_ctx_hello }
+	votc_log = { key = votc_ctx_probe }
+	votc_log_alt = { key = votc_ctx_probe }
+	votc_dump_context = yes
+}
+
+# =====================================================================
+# Context dump
+# =====================================================================
+
+# The full picture of this country, as of right now. Called before every
+# request so the model never reasons on stale numbers.
+votc_dump_context = {
+	votc_restore_scopes = yes
+	votc_log_seq = { key = votc_ctx_head }
+	votc_log = { key = votc_ctx_state }
+	votc_log = { key = votc_ctx_might }
+	votc_log = { key = votc_ctx_realm }
+	votc_log = { key = votc_ctx_court }
+	votc_log = { key = votc_ctx_estates }
+	votc_log = { key = votc_ctx_estate_names }
+
+	if = {
+		limit = { has_ruler = yes }
+		ruler ?= { save_scope_as = votc_ruler }
+		votc_log = { key = votc_ctx_ruler }
+	}
+	if = {
+		limit = { has_heir = yes }
+		heir ?= { save_scope_as = votc_heir }
+		votc_log = { key = votc_ctx_heir }
+	}
+
+	votc_dump_court = yes
+
+	# Whatever the current scene is pointed at travels with every dump, so
+	# the middleware never has to ask for it separately.
+	if = {
+		limit = { exists = var:votc_tchar }
+		votc_log = { key = votc_ctx_target_char }
+	}
+	if = {
+		limit = { exists = var:votc_tcountry }
+		votc_log = { key = votc_ctx_target_country }
+	}
+	if = {
+		limit = { exists = var:votc_tlocation }
+		votc_log = { key = votc_ctx_location }
+	}
+}
+
+# A dump with a closing marker, and nothing else. The middleware uses this
+# when it has just pointed the mod at someone (a knock, say) and needs the
+# new context before it can write the scene. It is deliberately distinct
+# from votc_pulse: a sync must not wake the director.
+votc_refresh = {
+	votc_init_vars = yes
+	votc_dump_context = yes
+	votc_log_seq = { key = votc_req_sync }
+}
+
+# Up to eight of the most significant people at court, best first.
+# every_character is a global list in EU5, so it is always filtered by owner.
+votc_dump_court = {
+	ordered_character = {
+		limit = {
+			owner = root
+			is_alive = yes
+			is_adult = yes
+			OR = {
+				in_cabinet = yes
+				is_general = yes
+				is_admiral = yes
+				is_ruler = yes
+				is_heir = yes
+				is_regent = yes
+			}
+		}
+		order_by = total_abilities
+		max = 8
+		save_scope_as = votc_person
+		root = { votc_log = { key = votc_ctx_person } }
+	}
+}
+
+# =====================================================================
+# Player-facing entry points
+# =====================================================================
+
+# Talk to a character. $who$ is the character scope (scope:recipient from the
+# interaction); $topic$ is the conversation opener the player picked.
+votc_begin_talk = {
+	votc_init_vars = yes
+	votc_set_target_char = { who = $who$ }
+	set_variable = { name = votc_turn value = 0 }
+	set_variable = { name = votc_scene_actions value = 0 }
+	set_variable = { name = votc_scene_spent value = 0 }
+	votc_set_args = { a1 = $topic$ a2 = 0 a3 = 0 }
+	votc_dump_context = yes
+	votc_log_seq = { key = votc_req_talk_open }
+}
+
+# The player picked one of the AI's suggested lines.
+votc_talk_reply = {
+	change_variable = { name = votc_turn add = 1 }
+	votc_set_args = { a1 = $choice$ a2 = 0 a3 = 0 }
+	# Refresh the numbers: a previous turn may have changed them.
+	votc_dump_context = yes
+	votc_log_seq = { key = votc_req_talk_reply }
+}
+
+votc_end_talk = {
+	votc_log_seq = { key = votc_req_talk_end }
+	set_variable = { name = votc_turn value = 0 }
+	votc_clear_targets = yes
+}
+
+# Summon the Crown Council. $agenda$ is the topic the player chose.
+votc_begin_council = {
+	votc_init_vars = yes
+	set_variable = { name = votc_scene_actions value = 0 }
+	set_variable = { name = votc_scene_spent value = 0 }
+	votc_set_args = { a1 = $agenda$ a2 = 0 a3 = 0 }
+	votc_dump_context = yes
+	votc_log_seq = { key = votc_req_council_open }
+}
+
+votc_council_choice = {
+	votc_set_args = { a1 = $choice$ a2 = 0 a3 = 0 }
+	votc_log_seq = { key = votc_req_council_choice }
+}
+
+# Ride out on progress. $where$ is the location the player picked.
+votc_begin_progress = {
+	votc_init_vars = yes
+	votc_set_target_location = { where = $where$ }
+	set_variable = { name = votc_scene_actions value = 0 }
+	set_variable = { name = votc_scene_spent value = 0 }
+	votc_set_args = { a1 = $mode$ a2 = 0 a3 = 0 }
+	votc_dump_context = yes
+	votc_log_seq = { key = votc_req_progress_open }
+}
+
+votc_progress_choice = {
+	votc_set_args = { a1 = $choice$ a2 = 0 a3 = 0 }
+	votc_log_seq = { key = votc_req_progress_choice }
+}
+
+# Send an envoy to a foreign court. $who$ is the country scope.
+votc_begin_envoy = {
+	votc_init_vars = yes
+	votc_set_target_country = { who = $who$ }
+	set_variable = { name = votc_turn value = 0 }
+	set_variable = { name = votc_scene_actions value = 0 }
+	set_variable = { name = votc_scene_spent value = 0 }
+	votc_set_args = { a1 = $errand$ a2 = 0 a3 = 0 }
+	votc_dump_context = yes
+	votc_log_seq = { key = votc_req_envoy_open }
+}
+
+# Someone came to the player; this is the player's answer.
+votc_knock_reply = {
+	votc_set_args = { a1 = $choice$ a2 = 0 a3 = 0 }
+	votc_log_seq = { key = votc_req_knock_reply }
+}
+
+# =====================================================================
+# Heartbeat
+# =====================================================================
+
+# Refills the influence budget by ELAPSED GAME TIME, not by how often this
+# happens to be called. Calling it a hundred times in one month grants one
+# month of influence; calling it once after five years grants five years of
+# it (up to the cap). That makes the mod indifferent to whether the pulse
+# comes from the yearly on_action or from the middleware, which is what lets
+# VotC avoid redefining any vanilla on_action.
+votc_regen_budget = {
+	votc_init_vars = yes
+	if = {
+		limit = { NOT = { has_variable = votc_last_regen } }
+		set_variable = { name = votc_last_regen value = votc_abs_month }
+	}
+	if = {
+		limit = { var:votc_last_regen < votc_abs_month }
+		change_variable = {
+			name = votc_budget
+			add = {
+				value = votc_abs_month
+				subtract = var:votc_last_regen
+				multiply = votc_budget_monthly_regen
+			}
+		}
+		set_variable = { name = votc_last_regen value = votc_abs_month }
+	}
+	if = {
+		limit = { var:votc_budget > votc_budget_max }
+		set_variable = { name = votc_budget value = votc_budget_max }
+	}
+	if = {
+		limit = { var:votc_budget < 0 }
+		set_variable = { name = votc_budget value = 0 }
+	}
+}
+
+# One pulse: top up, then tell the middleware where the realm stands. Court
+# Brain diffs consecutive pulses to notice what changed - a new ruler, a war
+# begun, stability falling - instead of hooking vanilla's on_actions, which
+# would mean redefining them and risking the flavour content they already
+# carry.
+votc_pulse = {
+	votc_regen_budget = yes
+	votc_dump_context = yes
+	votc_log_seq = { key = votc_req_tick }
+}
+
+# =====================================================================
+# Estate audience
+# =====================================================================
+
+# Called by the votc_hear_estate action. scope:target is the estate the
+# player picked; the agenda number tells the middleware which one, using the
+# same order the ESTATES context line uses.
+votc_begin_estate_council = {
+	if = {
+		limit = { scope:target ?= { estate_type = estate_type:nobles_estate } }
+		votc_begin_council = { agenda = 1 }
+	}
+	else_if = {
+		limit = { scope:target ?= { estate_type = estate_type:clergy_estate } }
+		votc_begin_council = { agenda = 2 }
+	}
+	else_if = {
+		limit = { scope:target ?= { estate_type = estate_type:burghers_estate } }
+		votc_begin_council = { agenda = 3 }
+	}
+	else_if = {
+		limit = { scope:target ?= { estate_type = estate_type:peasants_estate } }
+		votc_begin_council = { agenda = 4 }
+	}
+	else_if = {
+		limit = { scope:target ?= { estate_type = estate_type:tribes_estate } }
+		votc_begin_council = { agenda = 5 }
+	}
+	else_if = {
+		limit = { scope:target ?= { estate_type = estate_type:dhimmi_estate } }
+		votc_begin_council = { agenda = 6 }
+	}
+	else_if = {
+		limit = { scope:target ?= { estate_type = estate_type:cossacks_estate } }
+		votc_begin_council = { agenda = 7 }
+	}
+	else = {
+		votc_begin_council = { agenda = 0 }
+	}
+}

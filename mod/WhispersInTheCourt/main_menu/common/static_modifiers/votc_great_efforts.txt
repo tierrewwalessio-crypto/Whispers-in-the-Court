@@ -1,0 +1,32 @@
+﻿# Whispers in the Court - GREAT EFFORTS: what a realm can do once in a long while,
+# when the moment is exceptional and the realm is behind its ruler (Court Brain
+# checks stability, legitimacy, the estates' mood and weariness of war before it
+# allows one; the game allows one every ten years). Each lasts two years and has
+# its price. Values: vanilla's own strongest for each modifier.
+# Applied by votc_act_great_effort (votc_action_effects.txt).
+
+# The realm rises in arms: every order of the realm sends more men than it owes.
+votc_great_muster = {
+	game_data = { category = country }
+	nobles_estate_levy_size = 0.5
+	peasants_estate_levy_size = 0.5
+	burghers_estate_levy_size = 0.5
+	clergy_estate_levy_size = 0.5
+	global_levy_recruitment_speed_modifier = 0.33
+	global_production_efficiency = -0.1
+}
+
+# The realm builds as one: carters, masons and the Crown's gold on every site.
+votc_great_works = {
+	game_data = { category = country }
+	global_construction_speed = 0.5
+}
+
+# A great revival of the faith: preachers everywhere, and little patience for dissent.
+votc_great_revival = {
+	game_data = { category = country }
+	global_pop_conversion_speed_modifier = 0.5
+	monthly_religious_influence = 0.2
+	tolerance_heretic = -1
+	tolerance_heathen = -1
+}

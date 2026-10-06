@@ -1,0 +1,61 @@
+﻿# Voices of the Court - addressing a foreign court.
+#
+# An envoy carries one errand and brings back one answer - but that answer
+# can be anything an answer between crowns really could be. Opinion, trust
+# and favours shift on their own; an alliance, a truce, a guarantee, a claim
+# pressed, a war declared or a war ended are STAGED against one of the
+# report's options and happen only when the player clicks it. See
+# in_game/common/scripted_effects/votc_diplomacy_effects.txt for the full
+# catalogue and for the conditions each outcome re-checks before it fires.
+#
+# scope:actor     = the player's country
+# scope:recipient = the court being addressed
+
+votc_send_envoy = {
+	type = diplomacy
+	show_message = no
+	show_message_to_target = no
+	use_enroute = yes
+	block_when_at_war = no
+
+	ai_tick = never
+
+	potential = {
+		scope:actor = {
+			is_human = yes
+			has_variable = votc_enabled
+		}
+	}
+
+	allow = {
+		scope:recipient ?= {
+			is_ai = yes
+			has_ruler = yes
+		}
+	}
+
+	select_trigger = {
+		looking_for_a = country
+		source = knowncountries
+		target_flag = recipient
+		name = "votc_choose_court"
+		column = { data = name }
+		visible = {
+			NOT = { this = scope:actor }
+		}
+		enabled = {
+			has_ruler = yes
+		}
+	}
+
+	cooldown = {
+		type = votc_envoy
+		days = 30
+	}
+
+	effect = {
+		scope:actor = {
+			votc_begin_envoy = { who = scope:recipient errand = 0 }
+		}
+	}
+}

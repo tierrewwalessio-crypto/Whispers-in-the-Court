@@ -1,0 +1,49 @@
+﻿l_english:
+
+ # ===================================================================
+ # Voices of the Court - CONTEXT TEMPLATES
+ #
+ # These keys are never shown to the player. They are fed to the
+ # `debug_log` effect, which resolves a localisation string (with ROOT,
+ # SCOPE and PREV available) and writes the result to logs/error.log.
+ # Court Brain tails that file and parses the pipe separated records.
+ #
+ # Record shape:  VOTC1|<TYPE>|<field>|<field>|...
+ # Numbers are printed through script values defined in
+ # in_game/common/script_values/votc_runtime_values.txt so the mod, not
+ # the middleware, decides what a number means.
+ # ===================================================================
+
+ # --- handshake / probe -------------------------------------------------
+ votc_ctx_probe:0 "VOTC1|PROBE|loc_ok|[GetDateString]|[ROOT.GetCountry.GetTag]|[ROOT.ScriptValue('votc_c_gold')|0]"
+ votc_ctx_hello:0 "VOTC1|HELLO|1.0.0|[GetDateString]|[ROOT.GetCountry.GetTag]|[ROOT.GetCountry.GetNameWithNoTooltip]"
+ votc_ctx_bye:0 "VOTC1|BYE|[GetDateString]|[ROOT.GetCountry.GetTag]"
+
+ # --- who and where we are ---------------------------------------------
+ votc_ctx_head:0 "VOTC1|HEAD|[GetDateString]|[ROOT.GetCountry.GetTag]|[ROOT.GetCountry.GetNameWithNoTooltip]|[ROOT.GetCountry.GetLongNameWithNoTooltip]|[ROOT.GetCountry.GetAdjectiveWithNoTooltip]|[ROOT.GetCountry.GetGovernment.GetGovernmentType.GetName]|[ROOT.GetCountry.GetGovernment.GetRulerTitle]|[ROOT.GetCountry.GetGovernment.GetCourtTitle]|[ROOT.GetCountry.GetCapital.GetNameWithNoTooltip]|[ROOT.GetCountry.GetCulture.GetNameWithNoTooltip]|[ROOT.GetCountry.GetReligion.GetName]|[ROOT.GetCountry.GetCourtLanguage.GetName]|rank=[ROOT.ScriptValue('votc_c_rank')|0]"
+
+ # --- the ledger --------------------------------------------------------
+ votc_ctx_state:0 "VOTC1|STATE|gold=[ROOT.ScriptValue('votc_c_gold')|0]|balance=[ROOT.ScriptValue('votc_c_monthly_balance')|0]|taxbase=[ROOT.ScriptValue('votc_c_tax_base')|0]|loans=[ROOT.ScriptValue('votc_c_loans')|0]|inflation=[ROOT.ScriptValue('votc_c_inflation')|0]|stability=[ROOT.ScriptValue('votc_c_stability')|0]|prestige=[ROOT.ScriptValue('votc_c_prestige')|0]|legitimacy=[ROOT.ScriptValue('votc_c_legitimacy')|0]|govpower=[ROOT.ScriptValue('votc_c_gov_power')|0]|prosperity=[ROOT.ScriptValue('votc_c_prosperity')|0]"
+ votc_ctx_might:0 "VOTC1|MIGHT|manpower=[ROOT.ScriptValue('votc_c_manpower')|0]|maxmanpower=[ROOT.ScriptValue('votc_c_max_manpower')|0]|army=[ROOT.ScriptValue('votc_c_army_size')|0]|navy=[ROOT.ScriptValue('votc_c_navy_size')|0]|warexhaustion=[ROOT.ScriptValue('votc_c_war_exhaustion')|0]|atwar=[ROOT.ScriptValue('votc_c_at_war')|0]|wars=[ROOT.ScriptValue('votc_c_num_wars')|0]"
+ votc_ctx_realm:0 "VOTC1|REALM|population=[ROOT.ScriptValue('votc_c_population')|0]|development=[ROOT.ScriptValue('votc_c_development')|0]|locations=[ROOT.ScriptValue('votc_c_locations')|0]|religiousunity=[ROOT.ScriptValue('votc_c_religious_unity_pct')|0]|subjects=[ROOT.ScriptValue('votc_c_subjects')|0]|issubject=[ROOT.ScriptValue('votc_c_is_subject')|0]|parliament=[ROOT.ScriptValue('votc_c_has_parliament')|0]|regency=[ROOT.ScriptValue('votc_c_has_regent')|0]|heir=[ROOT.ScriptValue('votc_c_has_heir')|0]"
+ votc_ctx_court:0 "VOTC1|COURT|allies=[ROOT.ScriptValue('votc_c_num_allies')|0]|rivals=[ROOT.ScriptValue('votc_c_num_rivals')|0]|neighbours=[ROOT.ScriptValue('votc_c_num_neighbours')|0]|budget=[ROOT.ScriptValue('votc_c_budget')|0]"
+
+ # --- the estates (satisfaction 0-100) ----------------------------------
+ votc_ctx_estates:0 "VOTC1|ESTATES|nobles=[ROOT.ScriptValue('votc_c_sat_nobles')|0]|clergy=[ROOT.ScriptValue('votc_c_sat_clergy')|0]|burghers=[ROOT.ScriptValue('votc_c_sat_burghers')|0]|peasants=[ROOT.ScriptValue('votc_c_sat_peasants')|0]|tribes=[ROOT.ScriptValue('votc_c_sat_tribes')|0]|dhimmi=[ROOT.ScriptValue('votc_c_sat_dhimmi')|0]|cossacks=[ROOT.ScriptValue('votc_c_sat_cossacks')|0]"
+ votc_ctx_estate_names:0 "VOTC1|ESTATENAMES|nobles=[ROOT.GetCountry.GetGovernment.GetEstateNameWithNoTooltip('nobles_estate')]|clergy=[ROOT.GetCountry.GetGovernment.GetEstateNameWithNoTooltip('clergy_estate')]|burghers=[ROOT.GetCountry.GetGovernment.GetEstateNameWithNoTooltip('burghers_estate')]|peasants=[ROOT.GetCountry.GetGovernment.GetEstateNameWithNoTooltip('peasants_estate')]|crown=[ROOT.GetCountry.GetGovernment.GetEstateNameWithNoTooltip('crown_estate')]"
+
+ # --- the dynasty at the top --------------------------------------------
+ votc_ctx_ruler:0 "VOTC1|RULER|[SCOPE.sCharacter('votc_ruler').GetNameWithNoTooltip]|[SCOPE.sCharacter('votc_ruler').GetDynasty.GetName]|adm=[SCOPE.sCharacter('votc_ruler').MakeScope.ScriptValue('votc_ch_adm')|0]|dip=[SCOPE.sCharacter('votc_ruler').MakeScope.ScriptValue('votc_ch_dip')|0]|mil=[SCOPE.sCharacter('votc_ruler').MakeScope.ScriptValue('votc_ch_mil')|0]|age=[SCOPE.sCharacter('votc_ruler').MakeScope.ScriptValue('votc_ch_age')|0]|female=[SCOPE.sCharacter('votc_ruler').MakeScope.ScriptValue('votc_ch_is_female')|0]|religion=[SCOPE.sCharacter('votc_ruler').GetReligion.GetName]"
+ votc_ctx_heir:0 "VOTC1|HEIR|[SCOPE.sCharacter('votc_heir').GetNameWithNoTooltip]|adm=[SCOPE.sCharacter('votc_heir').MakeScope.ScriptValue('votc_ch_adm')|0]|dip=[SCOPE.sCharacter('votc_heir').MakeScope.ScriptValue('votc_ch_dip')|0]|mil=[SCOPE.sCharacter('votc_heir').MakeScope.ScriptValue('votc_ch_mil')|0]|age=[SCOPE.sCharacter('votc_heir').MakeScope.ScriptValue('votc_ch_age')|0]"
+
+ # --- one court member, emitted once per member --------------------------
+ votc_ctx_person:0 "VOTC1|PERSON|[SCOPE.sCharacter('votc_person').GetNameWithNoTooltip]|[SCOPE.sCharacter('votc_person').GetDynasty.GetName]|[SCOPE.sCharacter('votc_person').GetRoleName]|adm=[SCOPE.sCharacter('votc_person').MakeScope.ScriptValue('votc_ch_adm')|0]|dip=[SCOPE.sCharacter('votc_person').MakeScope.ScriptValue('votc_ch_dip')|0]|mil=[SCOPE.sCharacter('votc_person').MakeScope.ScriptValue('votc_ch_mil')|0]|age=[SCOPE.sCharacter('votc_person').MakeScope.ScriptValue('votc_ch_age')|0]|cabinet=[SCOPE.sCharacter('votc_person').MakeScope.ScriptValue('votc_ch_in_cabinet')|0]|general=[SCOPE.sCharacter('votc_person').MakeScope.ScriptValue('votc_ch_is_general')|0]|religion=[SCOPE.sCharacter('votc_person').GetReligion.GetName]"
+
+ # --- the person we are actually talking to ------------------------------
+ votc_ctx_target_char:0 "VOTC1|TARGETCHAR|[SCOPE.sCharacter('votc_target_char').GetNameWithNoTooltip]|[SCOPE.sCharacter('votc_target_char').GetDynasty.GetName]|[SCOPE.sCharacter('votc_target_char').GetRoleName]|[SCOPE.sCharacter('votc_target_char').GetCourtCountry.GetNameWithNoTooltip]|adm=[SCOPE.sCharacter('votc_target_char').MakeScope.ScriptValue('votc_ch_adm')|0]|dip=[SCOPE.sCharacter('votc_target_char').MakeScope.ScriptValue('votc_ch_dip')|0]|mil=[SCOPE.sCharacter('votc_target_char').MakeScope.ScriptValue('votc_ch_mil')|0]|age=[SCOPE.sCharacter('votc_target_char').MakeScope.ScriptValue('votc_ch_age')|0]|ruler=[SCOPE.sCharacter('votc_target_char').MakeScope.ScriptValue('votc_ch_is_ruler')|0]|heir=[SCOPE.sCharacter('votc_target_char').MakeScope.ScriptValue('votc_ch_is_heir')|0]|cabinet=[SCOPE.sCharacter('votc_target_char').MakeScope.ScriptValue('votc_ch_in_cabinet')|0]|general=[SCOPE.sCharacter('votc_target_char').MakeScope.ScriptValue('votc_ch_is_general')|0]|female=[SCOPE.sCharacter('votc_target_char').MakeScope.ScriptValue('votc_ch_is_female')|0]|religion=[SCOPE.sCharacter('votc_target_char').GetReligion.GetName]"
+
+ # --- a foreign court we are addressing ----------------------------------
+ votc_ctx_target_country:0 "VOTC1|TARGETCOUNTRY|[SCOPE.sCountry('votc_target_country').GetTag]|[SCOPE.sCountry('votc_target_country').GetNameWithNoTooltip]|[SCOPE.sCountry('votc_target_country').GetLongNameWithNoTooltip]|[SCOPE.sCountry('votc_target_country').GetGovernment.GetGovernmentType.GetName]|[SCOPE.sCountry('votc_target_country').GetGovernment.GetRuler.GetNameWithNoTooltip]|[SCOPE.sCountry('votc_target_country').GetReligion.GetName]|[SCOPE.sCountry('votc_target_country').GetCulture.GetNameWithNoTooltip]|gold=[SCOPE.sCountry('votc_target_country').MakeScope.ScriptValue('votc_c_gold')|0]|army=[SCOPE.sCountry('votc_target_country').MakeScope.ScriptValue('votc_c_army_size')|0]|locations=[SCOPE.sCountry('votc_target_country').MakeScope.ScriptValue('votc_c_locations')|0]|atwar=[SCOPE.sCountry('votc_target_country').MakeScope.ScriptValue('votc_c_at_war')|0]"
+
+ # --- a place the ruler is standing in ------------------------------------
+ votc_ctx_location:0 "VOTC1|LOCATION|[SCOPE.sLocation('votc_target_location').GetNameWithNoTooltip]|[SCOPE.sLocation('votc_target_location').GetProvince.GetName]|[SCOPE.sLocation('votc_target_location').GetDominantCulture.GetNameWithNoTooltip]|[SCOPE.sLocation('votc_target_location').GetDominantReligion.GetName]|[SCOPE.sLocation('votc_target_location').GetOwner.GetTag]|[SCOPE.sLocation('votc_target_location').GetController.GetTag]|control=[SCOPE.sLocation('votc_target_location').GetControl|0]|development=[SCOPE.sLocation('votc_target_location').GetDevelopment|0]|population=[SCOPE.sLocation('votc_target_location').GetTotalPopulation|0]|capital=[SCOPE.sLocation('votc_target_location').IsCapital]"

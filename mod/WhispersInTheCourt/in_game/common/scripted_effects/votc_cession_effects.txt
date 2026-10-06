@@ -1,0 +1,55 @@
+﻿# Whispers in the Court - territory changing hands.
+#
+# By an agreement the ruler concluded in a conversation (land ceded to the
+# ruler, by the ruler, or between two other realms), or in the course of a
+# story. Court Brain marks each location beforehand:
+#
+#   location:cagliari = { votc_cede_mark = { from = c:ARA to = c:KNI set = q } }
+#
+# (set q: the outcome of a conversation; o1..o3: a choice of a story event),
+# and queues votc_order_cessions for that set. Nothing moves until the ruler
+# presses the button: then every marked location still owned by the country
+# that gives it passes to the one that receives it - the old owner's core
+# removed, the new owner's added, fully integrated. A location that changed
+# hands meanwhile is left alone.
+
+votc_cede_mark = {
+	set_variable = { name = votc_cede_$set$ value = $to$ }
+	set_variable = { name = votc_cede_from_$set$ value = $from$ }
+}
+
+votc_order_cessions = {
+	every_country = {
+		every_owned_location = {
+			limit = { has_variable = votc_cede_$set$ }
+			if = {
+				limit = {
+					exists = var:votc_cede_from_$set$
+					owner = var:votc_cede_from_$set$
+				}
+				remove_core = owner
+				change_location_owner = var:votc_cede_$set$
+				add_core = var:votc_cede_$set$
+				change_integration_level = core
+			}
+		}
+	}
+	votc_clear_cession_set = { set = $set$ }
+}
+
+votc_clear_cession_set = {
+	every_country = {
+		every_owned_location = {
+			limit = { has_variable = votc_cede_$set$ }
+			remove_variable = votc_cede_$set$
+			remove_variable = votc_cede_from_$set$
+		}
+	}
+}
+
+# A story's choices each mark their own set: once one is chosen, the others go.
+votc_clear_cession_options = {
+	votc_clear_cession_set = { set = o1 }
+	votc_clear_cession_set = { set = o2 }
+	votc_clear_cession_set = { set = o3 }
+}

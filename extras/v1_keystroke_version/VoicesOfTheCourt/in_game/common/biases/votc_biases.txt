@@ -1,0 +1,42 @@
+﻿# Voices of the Court - opinion modifiers produced by conversations.
+#
+# Sized against the vanilla ladder documented at the top of
+# in_game/common/biases/03_opinion_from_events.txt:
+#   weak = 10 / mild = 25 / severe = 50
+# VotC never goes above "mild" on its own, and everything decays.
+
+votc_opinion_warm_words = {
+	value = 15
+	months = 120
+	yearly_decay = 1
+}
+
+votc_opinion_generous_audience = {
+	value = 25
+	months = 240
+	yearly_decay = 1
+}
+
+votc_opinion_cold_audience = {
+	value = -15
+	months = 120
+	yearly_decay = 1
+}
+
+votc_opinion_insulting_audience = {
+	value = -25
+	months = 240
+	yearly_decay = 1
+}
+
+votc_opinion_royal_promise = {
+	value = 20
+	months = 180
+	yearly_decay = 2
+}
+
+votc_opinion_broken_promise = {
+	value = -30
+	months = 300
+	yearly_decay = 1
+}

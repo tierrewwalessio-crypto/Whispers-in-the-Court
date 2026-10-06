@@ -1,0 +1,29 @@
+﻿# Whispers in the Court - the same as the battle window's "Command" button,
+# from the army's own panel while it is fighting.
+votc_take_command = {
+	toggle = no
+	army_only = yes
+	map = no
+
+	hidden = {
+		in_combat = no
+	}
+
+	allow = {
+		in_combat = yes
+		owner = { is_ai = no }
+	}
+
+	start_effect = {
+		unit_location = { save_scope_as = votc_bloc }
+		owner = {
+			set_variable = { name = votc_bloc value = scope:votc_bloc }
+			set_variable = { name = votc_bt_hold value = 1 }
+			set_variable = { name = votc_sig_btake value = 1 }
+		}
+	}
+
+	ai_will_do = {
+		value = 0
+	}
+}

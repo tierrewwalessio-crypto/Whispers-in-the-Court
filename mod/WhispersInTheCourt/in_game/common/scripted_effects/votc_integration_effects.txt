@@ -1,0 +1,43 @@
+﻿# Whispers in the Court - INTEGRATION chosen in a story: a place bound closer to the realm.
+#
+# Court Brain marks the places of each choice (votc_integ_mark, the value is the size) when it
+# sends the event; the choice pressed applies its own set (votc_order_integrate) and the other
+# choices' marks are cleared. The same steps as the "integrate" work (courtbrain/works.py):
+#   1 - the effort begins: the place integrates faster for ten years;
+#   2 - one step: conquered -> integrated, integrated -> core;
+#   3 - all the way to core, when its people are the realm's own (culture or faith); else a step.
+
+votc_integ_mark = {
+	set_variable = { name = votc_integ_$set$ value = $size$ }
+}
+
+votc_clear_integ_options = {
+	every_owned_location = {
+		limit = { OR = { has_variable = votc_integ_o1 has_variable = votc_integ_o2 has_variable = votc_integ_o3 } }
+		remove_variable = votc_integ_o1
+		remove_variable = votc_integ_o2
+		remove_variable = votc_integ_o3
+	}
+}
+
+votc_order_integrate = {
+	every_owned_location = {
+		limit = { has_variable = votc_integ_$set$ NOT = { integration_level = core } }
+		add_location_modifier = { modifier = votc_integration_drive years = 10 mode = add_and_extend }
+		if = {
+			limit = { var:votc_integ_$set$ >= 3 votc_integ_own_people = yes }
+			change_integration_level = core
+			add_core = root
+		}
+		else_if = {
+			limit = { var:votc_integ_$set$ >= 2 integration_level = conquered }
+			change_integration_level = integrated
+		}
+		else_if = {
+			limit = { var:votc_integ_$set$ >= 2 integration_level = integrated }
+			change_integration_level = core
+			add_core = root
+		}
+	}
+	votc_clear_integ_options = yes
+}

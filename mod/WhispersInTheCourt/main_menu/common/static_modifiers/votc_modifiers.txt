@@ -1,0 +1,149 @@
+﻿# Whispers in the Court - modifiers the AI is allowed to hand out.
+#
+# Everything here is deliberately SMALL and TIMED. A VotC edict is worth
+# roughly one vanilla event modifier; it is never a free permanent buff.
+# Only modifier keys that exist in
+#   main_menu/common/static_modifiers/country.txt (category = country)
+#   main_menu/common/static_modifiers/character.txt (category = character)
+# are used.
+
+###############################################################
+# ROYAL EDICTS (country, timed, granted by the Crown Council)
+###############################################################
+
+# "Charter of the Merchants" - protects traders, standardises weights.
+votc_edict_trade_charter = {
+	game_data = { category = country }
+	global_trade_center_power = 0.05
+	global_merchant_power = 0.05
+	burghers_estate_min_tax = 0.02
+}
+
+# "Ordinance on the Roads" - the Crown pays for road work.
+votc_edict_road_ordinance = {
+	game_data = { category = country }
+	global_road_building_time = -0.10
+	global_construction_speed = 0.05
+	global_monthly_control = 0.02
+}
+
+# "Muster of the Realm" - levies are called and drilled.
+votc_edict_muster = {
+	game_data = { category = country }
+	global_levy_recruitment_speed_modifier = 0.10
+	land_morale_recovery = 0.05
+	monthly_army_tradition = 0.02
+}
+
+# "Confirmation of Privileges" - the nobility is courted.
+votc_edict_noble_confirmation = {
+	game_data = { category = country }
+	global_nobles_estate_power = 0.03
+	nobles_estate_levy_size = 0.05
+	global_estate_satisfaction_recovery = 0.05
+}
+
+# "Pious Endowment" - the Church receives the Crown's favour.
+votc_edict_pious_endowment = {
+	game_data = { category = country }
+	global_clergy_estate_power = 0.03
+	monthly_religious_influence = 0.02
+	global_pop_conversion_speed_modifier = 0.05
+}
+
+# "Reform of the Chancery" - clerks, ledgers and seals.
+votc_edict_chancery_reform = {
+	game_data = { category = country }
+	global_bureaucracy_maintenance_efficiency = 0.05
+	country_cabinet_efficiency = 0.05
+	legislative_efficiency = 0.05
+}
+
+# "The King's Justice" - assizes ride out, unrest falls.
+votc_edict_kings_justice = {
+	game_data = { category = country }
+	local_unrest = -0.5
+	global_separatism = -0.05
+	monthly_rebel_growth = -0.02
+}
+
+# "Patronage of Letters" - schools, scribes, universities.
+votc_edict_patronage_letters = {
+	game_data = { category = country }
+	research_speed_modifier = 0.04
+	global_monthly_literacy = 0.02
+	global_institution_growth_modifier = 0.05
+}
+
+# "Edict of Toleration" - the Crown stays the hand of the zealous.
+votc_edict_toleration = {
+	game_data = { category = country }
+	tolerance_heathen = 1
+	tolerance_heretic = 1
+	global_separatism = -0.03
+}
+
+# "Debasement of the Coin" - short money now, inflation later.
+# The only edict with a genuine downside; the AI may propose it in a crisis.
+votc_edict_debasement = {
+	game_data = { category = country }
+	minting_income_factor = 0.10
+	monthly_inflation = 0.02
+	global_production_efficiency = -0.02
+}
+
+# "Granaries Opened" - famine relief at the Crown's expense.
+votc_edict_granaries = {
+	game_data = { category = country }
+	global_monthly_food_modifier = 0.10
+	global_pop_food_consumption = -0.05
+	monthly_gold_expense = 0.02
+}
+
+# "Summon the Estates" - the realm is consulted before a great decision.
+votc_edict_summon_estates = {
+	game_data = { category = country }
+	parliament_base_support = 5
+	global_estate_target_satisfaction = 0.03
+	legislative_efficiency = 0.05
+}
+
+###############################################################
+# AFTERMATH OF A ROYAL PROGRESS (country, short and local-flavoured)
+###############################################################
+
+votc_progress_acclaimed = {
+	game_data = { category = country }
+	global_monthly_control = 0.03
+	global_estate_satisfaction_recovery = 0.05
+	monthly_prestige = 0.02
+}
+
+votc_progress_resented = {
+	game_data = { category = country }
+	global_monthly_control = -0.02
+	monthly_rebel_growth = 0.02
+}
+
+###############################################################
+# CHARACTER MODIFIERS (what a conversation can do to a person)
+###############################################################
+
+# The ruler took the advisor's counsel to heart.
+votc_char_trusted_counsel = {
+	game_data = { category = character }
+	character_cabinet_efficiency = 0.05
+}
+
+# The character left the audience cold and sidelined.
+votc_char_slighted = {
+	game_data = { category = character }
+	character_cabinet_efficiency = -0.05
+}
+
+# A soldier sent away with the King's own words in his ears.
+votc_char_kings_word = {
+	game_data = { category = character }
+	land_morale_modifier = 0.03
+	commander_combat_bonus = 0.02
+}

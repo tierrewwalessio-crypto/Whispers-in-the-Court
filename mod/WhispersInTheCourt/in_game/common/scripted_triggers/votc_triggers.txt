@@ -1,0 +1,72 @@
+﻿# Whispers in the Court - scripted triggers.
+
+# May the court spend influence on cost band $c$? Reads only the budget as it
+# stood when the mail began, never a value written during the same run (EU5
+# does not show an effect its own writes). The per-scene cap is enforced by
+# Court Brain before the mail is written.
+votc_can_spend = {
+	has_variable = votc_budget
+	var:votc_budget >= votc_cost_$c$
+}
+
+# Has this mail not run yet? (run/votc_poll.txt is run every few seconds.)
+votc_mail_is_new = {
+	OR = {
+		NOT = { has_variable = votc_mail_seq }
+		var:votc_mail_seq < $seq$
+	}
+}
+
+# Is this rank lower than the one the country has now? (levels: county 1,
+# duchy 2, kingdom 3, empire 4, as in common/country_ranks)
+votc_rank_below_current_rank_county = { country_rank_level > 1 }
+votc_rank_below_current_rank_duchy = { country_rank_level > 2 }
+votc_rank_below_current_rank_kingdom = { country_rank_level > 3 }
+votc_rank_below_current_rank_empire = { always = no }
+
+# The text of a scene (kind: out, chr, knk, arc, obt, cen, bt, bte) is really
+# there: Court Brain numbered the scene when it sent it and has not found it
+# lost since (a save loaded without Court Brain's copy of the text).
+votc_scene_ok = {
+	has_variable = votc_scene_$kind$
+	NOT = { has_variable = votc_void_$kind$ }
+}
+
+# Does a consequence hurt the realm? Chosen by the effect's own parameter
+# ("votc_hurts_$sign$ = yes"), so a penalty is never held back by the influence.
+votc_hurts_penalty = { always = yes }
+votc_hurts_bonus = { always = no }
+# War exhaustion hurts when it grows.
+votc_hurts_we_bonus = { always = yes }
+votc_hurts_we_penalty = { always = no }
+votc_hurts_votc_opinion_warm_words = { always = no }
+votc_hurts_votc_opinion_generous_audience = { always = no }
+votc_hurts_votc_opinion_royal_promise = { always = no }
+votc_hurts_votc_opinion_cold_audience = { always = yes }
+votc_hurts_votc_opinion_insulting_audience = { always = yes }
+votc_hurts_votc_opinion_broken_promise = { always = yes }
+
+# A place whose people are the realm's own - its culture (primary or accepted) or its faith:
+# they can be made part of the realm's heartland at once (votc_order_integrate, works "integrate").
+votc_integ_own_people = {
+	OR = {
+		owner = { has_primary_or_accepted_culture = prev.dominant_culture }
+		owner = { religion = prev.dominant_religion }
+	}
+}
+
+# The pops that belong to an estate, for its rising (votc_power_effects.txt).
+votc_pop_of_nobles_estate = { pop_type = pop_type:nobles }
+votc_pop_of_clergy_estate = { pop_type = pop_type:clergy }
+votc_pop_of_burghers_estate = { pop_type = pop_type:burghers }
+votc_pop_of_peasants_estate = { OR = { pop_type = pop_type:peasants pop_type = pop_type:laborers } }
+
+# A person who may go over to a rising: never the ruler, the heir, a minister or a commander.
+votc_may_join_rising = {
+	is_alive = yes
+	is_ruler = no
+	is_heir = no
+	in_cabinet = no
+	is_general = no
+	is_admiral = no
+}

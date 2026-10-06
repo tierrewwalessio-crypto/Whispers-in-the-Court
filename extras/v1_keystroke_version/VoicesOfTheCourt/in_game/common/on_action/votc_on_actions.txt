@@ -1,0 +1,38 @@
+﻿# Voices of the Court - the one place the mod hooks the game clock.
+#
+# This mod deliberately does NOT redefine any on_action vanilla already uses.
+# In EU5 each on_action is defined exactly once in
+# in_game/common/on_action/, and a mod that writes its own
+# `monthly_country_pulse = { ... }` block is at best relying on undocumented
+# merge behaviour and at worst replacing the flavour content vanilla put
+# there. VotC does not need to take that risk:
+#
+#   * budget regeneration is computed from elapsed game months
+#     (votc_regen_budget), so it does not care how often it is called;
+#   * the middleware gets a fresh context dump with every single request;
+#   * Court Brain works out what happened in the world by diffing
+#     consecutive snapshots, rather than by listening to on_new_ruler,
+#     on_war_declared and friends.
+#
+# yearly_country_pulse is fired by the engine and is not defined anywhere in
+# vanilla, so this file adds a hook without touching anything.
+#
+# If you do want minute-by-minute hooks, copy the optional file documented in
+# the mod's README into common/on_action/ - that one does redefine
+# monthly_country_pulse, and the README says exactly what that costs.
+
+yearly_country_pulse = {
+	on_actions = {
+		votc_yearly_hook
+	}
+}
+
+votc_yearly_hook = {
+	trigger = {
+		is_human = yes
+		has_variable = votc_enabled
+	}
+	effect = {
+		votc_pulse = yes
+	}
+}

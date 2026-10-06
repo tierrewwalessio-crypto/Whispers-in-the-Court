@@ -1,0 +1,117 @@
+﻿# Voices of the Court - balance envelope.
+#
+# ONE source of truth for every magnitude the AI is allowed to move.
+# The middleware (Court Brain) mirrors these numbers, but the game clamps
+# again here, so a hallucinating model can never exceed the envelope.
+#
+# All the *_weak_* / *_mild_* / *_severe_* constants used by the action
+# catalogue come from vanilla (main_menu/common/script_values/default_values.txt)
+# so a VotC outcome is always the size of an ordinary vanilla event outcome.
+
+# ----------------------------------------------------------- influence budget
+# The AI spends "court influence" to change the world. It regenerates monthly
+# and is capped, so a long AI session cannot snowball.
+votc_budget_max            = 100
+votc_budget_monthly_regen  = 25
+votc_budget_start          = 50
+
+# Cost per action tier. severe is deliberately expensive.
+# Each cost has a negative twin because change_variable only takes a plain
+# script value, and vanilla only ever writes literal negatives there
+# (change_variable = { name = x add = -1 }), so we keep to that shape.
+votc_cost_weak   = 5
+votc_cost_mild   = 12
+votc_cost_severe = 30
+votc_cost_weak_neg   = -5
+votc_cost_mild_neg   = -12
+votc_cost_severe_neg = -30
+
+# Cost of the structural actions.
+votc_cost_edict           = 25
+votc_cost_privilege       = 35
+votc_cost_opinion         = 10
+votc_cost_societal        = 20
+votc_cost_char_modifier   = 15
+# Outcomes between crowns. Priced far above anything domestic: with a cap of
+# votc_budget_max the AI can stage at most one war every few years, and a
+# subjugation only out of a completely untouched budget.
+votc_cost_war        = 60
+votc_cost_peace      = 45
+votc_cost_pact       = 40
+votc_cost_subjugate  = 100
+votc_cost_cb         = 25
+votc_cost_truce      = 20
+votc_cost_gift       = 15
+votc_cost_rival      = 10
+votc_cost_war_neg        = -60
+votc_cost_peace_neg      = -45
+votc_cost_pact_neg       = -40
+votc_cost_subjugate_neg  = -100
+votc_cost_cb_neg         = -25
+votc_cost_truce_neg      = -20
+votc_cost_gift_neg       = -15
+votc_cost_rival_neg      = -10
+
+votc_cost_edict_neg           = -25
+votc_cost_privilege_neg       = -35
+votc_cost_opinion_neg         = -10
+votc_cost_societal_neg        = -20
+votc_cost_char_modifier_neg   = -15
+
+# ------------------------------------------------------------------ cooldowns
+# Days between two AI-driven pushes of the same kind. Keeps the mod from
+# turning into an event spam machine.
+votc_cd_chronicle_days   = 20
+votc_cd_knock_days       = 45
+votc_cd_council_days     = 180
+votc_cd_progress_days    = 365
+votc_cd_talk_days        = 5
+
+# ------------------------------------------------------------------ gold band
+# Gold moved by a scene is a fraction of the country's tax base, never a flat
+# number, so it scales with the size of the country instead of breaking a
+# small one. (country_tax_base is read the same way vanilla reads it in
+# common/country_interactions/ask_for_money.txt.)
+votc_gold_weak = {
+	value = country_tax_base
+	multiply = 0.25
+	min = 1
+	max = 150
+	round = yes
+}
+votc_gold_mild = {
+	value = country_tax_base
+	multiply = 0.75
+	min = 3
+	max = 500
+	round = yes
+}
+votc_gold_severe = {
+	value = country_tax_base
+	multiply = 2
+	min = 10
+	max = 1200
+	round = yes
+}
+
+# ---------------------------------------------------------------- manpower band
+votc_manpower_weak = {
+	value = monthly_manpower
+	multiply = 1
+	min = 10
+	max = 2000
+	round = yes
+}
+votc_manpower_mild = {
+	value = monthly_manpower
+	multiply = 3
+	min = 50
+	max = 8000
+	round = yes
+}
+
+# -------------------------------------------------------------- session limits
+# Hard ceiling on how many exchanges a single conversation can run, and on how
+# many actions a single scene may apply.
+votc_max_turns_per_talk    = 12
+votc_max_actions_per_scene = 3

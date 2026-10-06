@@ -1,0 +1,20 @@
+﻿# Voices of the Court - alternative OUT channel.
+#
+# The engine documents the logging effect as
+#   "Log a string to the error log when this effect executes,
+#    error_log = message, the message can be a localization string with
+#    ROOT, SCOPE and PREV available"
+# and ships both `debug_log` and `error_log` as script tokens. Which of the
+# two is the effect and which is the parameter is not documented anywhere we
+# can read offline, so the mod uses `debug_log` as its primary channel (see
+# votc_log_effects.txt) and keeps `error_log` isolated in this file.
+#
+# If `error_log` turns out not to be an effect, the engine drops exactly this
+# one file with an "Unknown effect type" line in logs/error.log - which Court
+# Brain reads, reports once, and then ignores. Nothing else in the mod breaks.
+#
+# The handshake calls both; the middleware keeps whichever produced output.
+
+votc_log_alt = {
+	error_log = "$key$"
+}

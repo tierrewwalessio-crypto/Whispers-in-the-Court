@@ -1,0 +1,281 @@
+﻿# Whispers in the Court - the bridge. Invisible, created automatically through
+# gui/scripted_widgets/votc_widgets.txt (verified: layer + visible condition
+# are what make a scripted widget actually appear in EU5 1.3).
+#
+# 1. SIGNALS. Script raises var:votc_sig_<kind>; the matching state fires
+#    once, runs the command list in votc_emit_<kind> (see
+#    main_menu/localization/english/votc_bridge_l_english.yml), whose last
+#    command lowers the variable again.
+# 2. MAIL. Every few seconds the bridge runs run/votc_poll.txt. When Court
+#    Brain has something, that file raises var:votc_has_mail(_loc) and the
+#    bridge runs run/votc_in.txt (after reloading localisation if the mail
+#    carries new text).
+window = {
+	name = "votc_bridge"
+	layer = topbar
+	size = { 0 0 }
+	alwaystransparent = yes
+	datacontext = "[GetPlayer]"
+	visible = "[GetPlayer.IsValid]"
+
+	# Shown = a game was just started or loaded. Ask for a picture at once,
+	# so Court Brain learns which save it is looking at without waiting for
+	# the next heartbeat.
+	state = {
+		name = _show
+		on_start = "[ExecuteConsoleCommand(Localize('votc_cmd_hello'))]"
+	}
+	state = {
+		name = votc_emit_talk_state
+		trigger_when = "[GetPlayer.MakeScope.GetVariable('votc_sig_talk').IsSet]"
+		duration = 0.6
+		on_finish = "[ExecuteConsoleCommandsForced(Localize('votc_emit_talk'))]"
+	}
+	state = {
+		name = votc_emit_envoy_state
+		trigger_when = "[GetPlayer.MakeScope.GetVariable('votc_sig_envoy').IsSet]"
+		duration = 0.6
+		on_finish = "[ExecuteConsoleCommandsForced(Localize('votc_emit_envoy'))]"
+	}
+	state = {
+		name = votc_emit_council_state
+		trigger_when = "[GetPlayer.MakeScope.GetVariable('votc_sig_council').IsSet]"
+		duration = 0.6
+		on_finish = "[ExecuteConsoleCommandsForced(Localize('votc_emit_council'))]"
+	}
+	state = {
+		name = votc_emit_progress_state
+		trigger_when = "[GetPlayer.MakeScope.GetVariable('votc_sig_progress').IsSet]"
+		duration = 0.6
+		on_finish = "[ExecuteConsoleCommandsForced(Localize('votc_emit_progress'))]"
+	}
+	state = {
+		name = votc_emit_reply_state
+		trigger_when = "[GetPlayer.MakeScope.GetVariable('votc_sig_reply').IsSet]"
+		duration = 0.6
+		on_finish = "[ExecuteConsoleCommandsForced(Localize('votc_emit_reply'))]"
+	}
+	state = {
+		name = votc_emit_pulse_state
+		trigger_when = "[GetPlayer.MakeScope.GetVariable('votc_sig_pulse').IsSet]"
+		duration = 0.6
+		on_finish = "[ExecuteConsoleCommandsForced(Localize('votc_emit_pulse'))]"
+	}
+	state = {
+		name = votc_emit_hub_state
+		trigger_when = "[GetPlayer.MakeScope.GetVariable('votc_sig_hub').IsSet]"
+		duration = 0.6
+		on_finish = "[ExecuteConsoleCommandsForced(Localize('votc_emit_hub'))]"
+	}
+	state = {
+		name = votc_emit_advisor_state
+		trigger_when = "[GetPlayer.MakeScope.GetVariable('votc_sig_advisor').IsSet]"
+		duration = 0.6
+		on_finish = "[ExecuteConsoleCommandsForced(Localize('votc_emit_advisor'))]"
+	}
+
+	state = {
+		name = votc_emit_decree_state
+		trigger_when = "[GetPlayer.MakeScope.GetVariable('votc_sig_decree').IsSet]"
+		duration = 0.6
+		on_finish = "[ExecuteConsoleCommandsForced(Localize('votc_emit_decree'))]"
+	}
+	state = {
+		name = votc_emit_arc_state
+		trigger_when = "[GetPlayer.MakeScope.GetVariable('votc_sig_arc').IsSet]"
+		duration = 0.6
+		on_finish = "[ExecuteConsoleCommandsForced(Localize('votc_emit_arc'))]"
+	}
+	state = {
+		name = votc_emit_ack_state
+		trigger_when = "[GetPlayer.MakeScope.GetVariable('votc_sig_ack').IsSet]"
+		duration = 0.6
+		# EU5 reloads text only when started with -debug_mode (verified: without it the
+		# console's reload does nothing, and turning debug mode on later does not help).
+		# The acknowledgement tells Court Brain, which warns the player.
+		on_finish = "[ExecuteConsoleCommandsForced(Localize(Select_CString(InDebugMode, 'votc_emit_ack', 'votc_emit_ack_nd')))]"
+	}
+
+	# MAIL. Court Brain writes each mail straight into run/votc_poll.txt, which
+	# the poll below runs every 3 seconds; a seq number makes it run once. So a
+	# mail needs no second console command - the old "run votc_in.txt" was
+	# rejected by the console ("still running commands") whenever it came in the
+	# same frame as the poll, and the mail was stuck for good.
+	# Only two things still need the console, and both wait a moment first:
+	# reloading the AI's text, and the periodic save.
+	# The player chose to lead the rebels: switch to their country.
+	state = {
+		name = votc_switch_state
+		trigger_when = "[GetGlobalVariable('votc_switch_to').IsSet]"
+		duration = 1.0
+		on_finish = "[ExecuteConsoleCommandsForced(Localize('votc_cmd_switch'))]"
+	}
+	state = {
+		name = votc_save_state
+		trigger_when = "[GetPlayer.MakeScope.GetVariable('votc_has_mail_save').IsSet]"
+		duration = 1.6
+		on_finish = "[ExecuteConsoleCommandsForced(Localize('votc_cmd_save'))]"
+	}
+
+	# EMPTYING THE GAME'S LOGS when Court Brain asks (votc_request_logs): debug.log
+	# grows by megabytes a minute in debug mode. Log.ClearAll is the game's own command.
+	widget = {
+		size = { 0 0 }
+		state = {
+			name = votc_logs_state
+			trigger_when = "[GetPlayer.MakeScope.GetVariable('votc_has_mail_logs').IsSet]"
+			duration = 1.2
+			on_finish = "[ExecuteConsoleCommandsForced(Localize('votc_cmd_logs'))]"
+		}
+	}
+
+	# RELOADING THE TEXT of a mail: two flags taking turns (see votc_request_reload),
+	# each in a widget of its own so that no other state can cut the reload short.
+	widget = {
+		size = { 0 0 }
+		state = {
+			name = votc_reload_state
+			trigger_when = "[GetPlayer.MakeScope.GetVariable('votc_has_mail_loc').IsSet]"
+			duration = 0.8
+			on_finish = "[ExecuteConsoleCommandsForced(Localize('votc_cmd_reload'))]"
+		}
+	}
+	widget = {
+		size = { 0 0 }
+		state = {
+			name = votc_reload_state_b
+			trigger_when = "[GetPlayer.MakeScope.GetVariable('votc_has_mail_loc_b').IsSet]"
+			duration = 0.8
+			on_finish = "[ExecuteConsoleCommandsForced(Localize('votc_cmd_reload'))]"
+		}
+	}
+
+	# COMMANDING A BATTLE (courtbrain/battle.py). Each group sits in a widget of
+	# its own, so that no state ever cuts another short.
+	# NEVER read the combat without HasCombat first: a combat that has ended is
+	# not an empty object but a crash. The field's reports choose their key with
+	# Select_CString, so a guarded key is not even localised without a combat.
+	# The player pressed "Command the battle": the bridge runs the take as a
+	# console command (root = the country), then sends the field.
+	widget = {
+		size = { 0 0 }
+		state = {
+			name = votc_btake_state
+			trigger_when = "[GetPlayer.MakeScope.GetVariable('votc_sig_btake').IsSet]"
+			duration = 0.3
+			on_finish = "[ExecuteConsoleCommandsForced(Localize('votc_cmd_btake'))]"
+		}
+	}
+	widget = {
+		size = { 0 0 }
+		state = {
+			name = votc_emit_battle_state
+			trigger_when = "[GetPlayer.MakeScope.GetVariable('votc_sig_battle').IsSet]"
+			duration = 0.6
+			on_finish = "[ExecuteConsoleCommandsForced(Localize(Select_CString(GetPlayer.MakeScope.GetVariable('votc_bloc').GetLocation.HasCombat, 'votc_emit_battle', 'votc_emit_battle_gone')))]"
+		}
+	}
+	widget = {
+		size = { 0 0 }
+		state = {
+			name = votc_emit_bchoice_state
+			trigger_when = "[GetPlayer.MakeScope.GetVariable('votc_sig_bchoice').IsSet]"
+			duration = 0.3
+			on_finish = "[ExecuteConsoleCommandsForced(Localize('votc_emit_bchoice'))]"
+		}
+	}
+	# The field's report, about once a second while the battle is commanded: two
+	# flags handing over to each other (votc_battle_flip). Each report also runs
+	# the mail poll, so that a pause reaches the game at once.
+	widget = {
+		size = { 0 0 }
+		state = {
+			name = votc_bt_ping_a
+			trigger_when = "[And(GetPlayer.MakeScope.GetVariable('votc_bt_live').IsSet, GetPlayer.MakeScope.GetVariable('votc_bt_a').IsSet)]"
+			duration = 1.2
+			on_finish = "[ExecuteConsoleCommandsForced(Localize(Select_CString(GetPlayer.MakeScope.GetVariable('votc_bloc').GetLocation.HasCombat, 'votc_emit_bstate', 'votc_emit_bgone')))]"
+		}
+	}
+	widget = {
+		size = { 0 0 }
+		state = {
+			name = votc_bt_ping_b
+			trigger_when = "[And(GetPlayer.MakeScope.GetVariable('votc_bt_live').IsSet, GetPlayer.MakeScope.GetVariable('votc_bt_b').IsSet)]"
+			duration = 1.2
+			on_finish = "[ExecuteConsoleCommandsForced(Localize(Select_CString(GetPlayer.MakeScope.GetVariable('votc_bloc').GetLocation.HasCombat, 'votc_emit_bstate', 'votc_emit_bgone')))]"
+		}
+	}
+	# Time: held while the battle waits for the ruler; run again at speed 1.
+	# OnPause TOGGLES the pause, and takes effect a frame later: a state with no
+	# duration fires again in that frame and toggles it straight back (tested:
+	# the game kept running). The duration keeps each state from firing twice.
+	# The mod's events also pause the game on their own while they are open.
+	widget = {
+		size = { 0 0 }
+		state = {
+			name = votc_bt_pause
+			trigger_when = "[And(GetPlayer.MakeScope.GetVariable('votc_bt_hold').IsSet, Not(IsGamePaused))]"
+			duration = 1.0
+			on_start = "[OnPause]"
+		}
+	}
+	widget = {
+		size = { 0 0 }
+		state = {
+			name = votc_bt_resume
+			trigger_when = "[And(GetPlayer.MakeScope.GetVariable('votc_bt_go').IsSet, IsGameUserPaused)]"
+			duration = 1.0
+			on_start = "[OnPause]"
+		}
+	}
+	widget = {
+		size = { 0 0 }
+		state = {
+			name = votc_bt_speed
+			trigger_when = "[And(GetPlayer.MakeScope.GetVariable('votc_bt_go').IsSet, Not(IsGamePaused))]"
+			duration = 1.0
+			on_start = "[OnSetGameSpeed('(int32)1')]"
+		}
+	}
+	widget = {
+		size = { 0 0 }
+		state = {
+			name = votc_bt_go_done
+			trigger_when = "[GetPlayer.MakeScope.GetVariable('votc_bt_go').IsSet]"
+			duration = 1.5
+			on_finish = "[ExecuteConsoleCommandsForced(Localize('votc_cmd_bgo_done'))]"
+		}
+	}
+
+	# Poll loop: four states handing over to each other every 3 seconds. The fourth
+	# always polls (every 12 seconds at the least); the other three poll only while
+	# something is on its way - var:votc_poll_fast, raised by the player's signals and
+	# by Court Brain while it has more to send (votc_poll_fast_on/off), or a battle
+	# being commanded. Otherwise they send a word the console ignores: in debug mode
+	# every real command costs the game a moment, and most of the time no mail comes.
+	state = {
+		name = votc_poll_tick
+		trigger_on_create = yes
+		duration = 3
+		on_finish = "[ExecuteConsoleCommand(Localize(Select_CString(Or(GetPlayer.MakeScope.GetVariable('votc_poll_fast').IsSet, GetPlayer.MakeScope.GetVariable('votc_bt_live').IsSet), 'votc_cmd_poll', 'votc_cmd_wait')))]"
+		on_finish = "[PdxGuiTriggerAllAnimations('votc_poll_tock')]"
+	}
+	state = {
+		name = votc_poll_tock
+		duration = 3
+		on_finish = "[ExecuteConsoleCommand(Localize(Select_CString(Or(GetPlayer.MakeScope.GetVariable('votc_poll_fast').IsSet, GetPlayer.MakeScope.GetVariable('votc_bt_live').IsSet), 'votc_cmd_poll', 'votc_cmd_wait')))]"
+		on_finish = "[PdxGuiTriggerAllAnimations('votc_poll_tack')]"
+	}
+	state = {
+		name = votc_poll_tack
+		duration = 3
+		on_finish = "[ExecuteConsoleCommand(Localize(Select_CString(Or(GetPlayer.MakeScope.GetVariable('votc_poll_fast').IsSet, GetPlayer.MakeScope.GetVariable('votc_bt_live').IsSet), 'votc_cmd_poll', 'votc_cmd_wait')))]"
+		on_finish = "[PdxGuiTriggerAllAnimations('votc_poll_tuck')]"
+	}
+	state = {
+		name = votc_poll_tuck
+		duration = 3
+		on_finish = "[ExecuteConsoleCommand(Localize('votc_cmd_poll'))]"
+		on_finish = "[PdxGuiTriggerAllAnimations('votc_poll_tick')]"
+	}
+}

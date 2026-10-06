@@ -1,0 +1,156 @@
+﻿# Whispers in the Court - TRADE IN GOODS (courtbrain/trade.py). A deal to buy a good abroad
+# costs gold every month for its years (the same bands as the incomes of courtbrain/actions.py);
+# gold or silver sold as metal leaves the mint poorer, bought as metal richer.
+
+votc_trade_expense1_weak = {
+	game_data = { category = country }
+	monthly_gold_expense = 0.5
+}
+votc_trade_expense1_mild = {
+	game_data = { category = country }
+	monthly_gold_expense = 1
+}
+votc_trade_expense1_severe = {
+	game_data = { category = country }
+	monthly_gold_expense = 1.5
+}
+votc_trade_expense1_grand = {
+	game_data = { category = country }
+	monthly_gold_expense = 2
+}
+votc_trade_expense2_weak = {
+	game_data = { category = country }
+	monthly_gold_expense = 1
+}
+votc_trade_expense2_mild = {
+	game_data = { category = country }
+	monthly_gold_expense = 2
+}
+votc_trade_expense2_severe = {
+	game_data = { category = country }
+	monthly_gold_expense = 3
+}
+votc_trade_expense2_grand = {
+	game_data = { category = country }
+	monthly_gold_expense = 4
+}
+votc_trade_expense3_weak = {
+	game_data = { category = country }
+	monthly_gold_expense = 2
+}
+votc_trade_expense3_mild = {
+	game_data = { category = country }
+	monthly_gold_expense = 4
+}
+votc_trade_expense3_severe = {
+	game_data = { category = country }
+	monthly_gold_expense = 6
+}
+votc_trade_expense3_grand = {
+	game_data = { category = country }
+	monthly_gold_expense = 8
+}
+votc_trade_expense4_weak = {
+	game_data = { category = country }
+	monthly_gold_expense = 4
+}
+votc_trade_expense4_mild = {
+	game_data = { category = country }
+	monthly_gold_expense = 8
+}
+votc_trade_expense4_severe = {
+	game_data = { category = country }
+	monthly_gold_expense = 12
+}
+votc_trade_expense4_grand = {
+	game_data = { category = country }
+	monthly_gold_expense = 16
+}
+votc_trade_expense5_weak = {
+	game_data = { category = country }
+	monthly_gold_expense = 8
+}
+votc_trade_expense5_mild = {
+	game_data = { category = country }
+	monthly_gold_expense = 16
+}
+votc_trade_expense5_severe = {
+	game_data = { category = country }
+	monthly_gold_expense = 24
+}
+votc_trade_expense5_grand = {
+	game_data = { category = country }
+	monthly_gold_expense = 32
+}
+votc_trade_expense6_weak = {
+	game_data = { category = country }
+	monthly_gold_expense = 15
+}
+votc_trade_expense6_mild = {
+	game_data = { category = country }
+	monthly_gold_expense = 30
+}
+votc_trade_expense6_severe = {
+	game_data = { category = country }
+	monthly_gold_expense = 45
+}
+votc_trade_expense6_grand = {
+	game_data = { category = country }
+	monthly_gold_expense = 60
+}
+votc_trade_expense7_weak = {
+	game_data = { category = country }
+	monthly_gold_expense = 30
+}
+votc_trade_expense7_mild = {
+	game_data = { category = country }
+	monthly_gold_expense = 60
+}
+votc_trade_expense7_severe = {
+	game_data = { category = country }
+	monthly_gold_expense = 90
+}
+votc_trade_expense7_grand = {
+	game_data = { category = country }
+	monthly_gold_expense = 120
+}
+votc_trade_expense8_weak = {
+	game_data = { category = country }
+	monthly_gold_expense = 60
+}
+votc_trade_expense8_mild = {
+	game_data = { category = country }
+	monthly_gold_expense = 120
+}
+votc_trade_expense8_severe = {
+	game_data = { category = country }
+	monthly_gold_expense = 180
+}
+votc_trade_expense8_grand = {
+	game_data = { category = country }
+	monthly_gold_expense = 240
+}
+votc_trade_mint_less_1 = {
+	game_data = { category = country }
+	minting_income_factor = -0.05
+}
+votc_trade_mint_more_1 = {
+	game_data = { category = country }
+	minting_income_factor = 0.05
+}
+votc_trade_mint_less_2 = {
+	game_data = { category = country }
+	minting_income_factor = -0.1
+}
+votc_trade_mint_more_2 = {
+	game_data = { category = country }
+	minting_income_factor = 0.1
+}
+votc_trade_mint_less_3 = {
+	game_data = { category = country }
+	minting_income_factor = -0.15
+}
+votc_trade_mint_more_3 = {
+	game_data = { category = country }
+	minting_income_factor = 0.15
+}

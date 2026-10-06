@@ -1,0 +1,14 @@
+﻿# Whispers in the Court - the "Command the battle" button of the battle window
+# (added to the game's battle_lateralview.gui at install, courtbrain/battleview.py).
+# scope:votc_bloc is the location of the battle. The game pauses at once; the
+# bridge then runs votc_battle_take and sends the field to Court Brain.
+votc_command_battle = {
+	scope = country
+	saved_scopes = { votc_bloc }
+
+	effect = {
+		set_variable = { name = votc_bloc value = scope:votc_bloc }
+		set_variable = { name = votc_bt_hold value = 1 }
+		set_variable = { name = votc_sig_btake value = 1 }
+	}
+}

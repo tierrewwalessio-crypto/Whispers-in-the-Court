@@ -1,0 +1,55 @@
+﻿# Whispers in the Court - talking to a person.
+#
+# Two interactions, because no vanilla interaction sets both on_own_nation
+# and on_other_nation, and with both set the game greyed ours out on the
+# player's own characters. One for your own court, one for foreign courts.
+#
+# scope:actor = the player's country, scope:recipient = the person.
+
+votc_speak_with = {
+	message = no
+	show_message = no
+	on_own_nation = yes
+	ai_tick = never
+
+	potential = { scope:actor = { is_human = yes } }
+	allow = { }
+
+	select_trigger = {
+		looking_for_a = character
+		source = actor
+		target_flag = recipient
+		name = "votc_choose_person"
+		column = { data = name }
+		visible = { is_alive = yes }
+		enabled = { is_adult = yes }
+	}
+
+	effect = {
+		scope:actor = { votc_signal_talk = { who = scope:recipient } }
+	}
+}
+
+votc_speak_foreign = {
+	message = no
+	show_message = no
+	on_other_nation = yes
+	ai_tick = never
+
+	potential = { scope:actor = { is_human = yes } }
+	allow = { }
+
+	select_trigger = {
+		looking_for_a = character
+		source = actor
+		target_flag = recipient
+		name = "votc_choose_person"
+		column = { data = name }
+		visible = { is_alive = yes }
+		enabled = { is_adult = yes }
+	}
+
+	effect = {
+		scope:actor = { votc_signal_talk = { who = scope:recipient } }
+	}
+}
