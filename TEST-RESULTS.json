@@ -1,0 +1,42 @@
+{
+  "build": "0.8.5-NoDebug-EN1",
+  "prepared_date": "2026-10-24",
+  "offline_tests_passed": 51,
+  "mod_script_files_validated": 72,
+  "upstream_action_variants_equal": 1637,
+  "variable_manifest_identical_to_RU3": true,
+  "variable_text_fields": 691,
+  "packaged_executable_check": {
+    "ok": true,
+    "build": "0.8.5-NoDebug-EN1",
+    "game_tested": false,
+    "russian_files": 16,
+    "russian_date": "1337.10.1",
+    "variable_text_fields": 691,
+    "law_text_encoding": true,
+    "startup_with_slow_ai": true,
+    "tls_context_verified": true
+  },
+  "packaged_public_https_check": {
+    "ok": true,
+    "credentials_used": false,
+    "inference_requests": 0,
+    "http_status": 404,
+    "tls_verified": true
+  },
+  "english_live_game_tested": false,
+  "english_steam_unlock_tested": false,
+  "ai_inference_requests": 0,
+  "ru_player_report": {
+    "actual_steam_achievement_unlock_reported": true,
+    "date": "2026-10-24",
+    "achievement_title_ru": "Господь дал, Господь и взял",
+    "evidence": "EVIDENCE/steam-achievement-player-screenshot.png",
+    "exact_executable_hash_recorded_at_unlock": false
+  },
+  "no_personal_config_credentials_saves_or_logs_packaged": true,
+  "source_file_count": 190,
+  "executable_sha256": "153ff617f54aca77eb91b939d5e074f618cb55c4b35a16ea8dd66154b6f889fd",
+  "upstream_input_archive_sha256": "4386bb25c53026993a02fd458a5419c79bbe57d3b0244f34fb50f92c035b1f64",
+  "diff_note": "Review diff normalizes line endings; binary changes are in the source archive."
+}
